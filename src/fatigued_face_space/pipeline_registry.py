@@ -1,8 +1,8 @@
 """Project pipelines."""
 from __future__ import annotations
 
-from kedro.framework.project import find_pipelines
 from kedro.pipeline import Pipeline
+import fatigued_face_space.pipelines.pipeline as pl
 
 
 def register_pipelines() -> dict[str, Pipeline]:
@@ -11,6 +11,7 @@ def register_pipelines() -> dict[str, Pipeline]:
     Returns:
         A mapping from pipeline names to ``Pipeline`` objects.
     """
-    pipelines = find_pipelines(raise_errors=True)
-    pipelines["__default__"] = sum(pipelines.values())
-    return pipelines
+    feature_extraction = pl.feature_extraction()
+    return {
+        "__default__": feature_extraction,
+            }

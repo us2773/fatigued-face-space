@@ -1,0 +1,15 @@
+openface: 
+  input_dir: data/01_raw/movie
+  temporary_dir: data/02_intermediate/openface_temporary
+  csv_dir: data/02_intermediate/openface_result
+
+# サンプル
+# baseはGit追跡対象であるため、編集しない。また、ここに環境情報を記載しない。
+# 下記をconf/local/parameters.ymlにコピペする。
+# docker_sampleをdockerという名前に変更し、docker_id, container_nameを自分の環境のものに変更してください。
+docker_sample:
+  docker_id: your_docker_container_id
+  docker_workdir: /home/openface-build
+  docker_processed_dir: /home/openface-build/processed
+  feature_extraction: /home/openface-build/build/bin/FeatureExtraction
+  container_name: your_container_name

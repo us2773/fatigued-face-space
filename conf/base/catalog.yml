@@ -2,3 +2,10 @@
 #
 # Documentation for this file format can be found in "The Data Catalog"
 # Link: https://docs.kedro.org/en/stable/catalog-data/introduction/#data-catalog
+
+openface_result:
+  type: partitions.PartitionedDataset
+  path: data/02_intermediate/openface_result
+  filename_suffix: ".parquet"
+  dataset:
+    type: pandas.ParquetDataset
