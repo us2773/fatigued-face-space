@@ -1,0 +1,5 @@
+# ここはGit追跡対象のconf/baseです。ここには環境設定を記載せず、実験ごとに作成するディレクトリに新たにglobals.ymlを作成し、
+# 実験名を記載して下さい。
+# 実験名は、実験ごとにconfに作成するディレクトリの名前、metadataを格納するCSVファイルの名前（01_raw/metadata_csv/metadata.xxx.csvのxxx）で共通です。
+
+metadata_file: your_expt_name
