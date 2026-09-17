@@ -121,6 +121,9 @@ def import_openface_files(incomplete_movies: list[str], output_dir: str) :
             csv_path,
             low_memory=False,
         )
+
+    # temporaryディレクトリのクリーンナップ
+    clean_openface_temporary(output_dir)
     return results
             
 
@@ -299,7 +302,7 @@ def get_metadata_by_movie(df, movie_name) :
     result = df[
             df["Name"] == movie_name
         ]
-    print(len(result))
+    #print(len(result))
     if len(result) == 0 :
         # キーが見つからない場合
         raise KeyError(f"{movie_name} is not found. ")
@@ -335,10 +338,10 @@ def get_features(df, metadata_list,  movie_name) :
     column_peakfreq = [f"AU{x:02}_peakfreq" for x in au_map_int]
     
     columns = column_metadata + column_mean + column_var + column_peakfreq
-    print(f"columns(len: {len(columns)}): {columns}")
+    # print(f"columns(len: {len(columns)}): {columns}")
 
     data = [metadata + trend_means + trend_vars + peak_freqs]
-    print(f"data(len: {len(data)}): {data}")
+    # print(f"data(len: {len(data)}): {data}")
     
     
     result = pd.DataFrame(
