@@ -4,7 +4,7 @@
 
 ## Overview
 
-This is your new Kedro project, which was generated using `kedro 1.6.0`.
+This is your new Kedro project, which was generated using `kedro 1.2.0`.
 
 Take a look at the [Kedro documentation](https://docs.kedro.org) to get started.
 

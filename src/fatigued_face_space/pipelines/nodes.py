@@ -66,7 +66,7 @@ def run_command(command: list[str]) -> subprocess.CompletedProcess[str]:
     return result
 
 # Dockerコンテナのクリーンナップ
-def clean_docker_files(docker_id: str, ) -> None:
+def clean_docker_files(docker_id: str, docker_workdir: str, docker_processed_dir: str) -> None:
     # Docker内の入力動画を削除
     run_command(
         [
@@ -75,7 +75,7 @@ def clean_docker_files(docker_id: str, ) -> None:
             docker_id,
             "bash",
             "-c",
-            "rm -f /home/openface-build/*.mp4",
+            f"rm -f {docker_workdir}/*.mp4",
         ]
     )
 
@@ -87,7 +87,7 @@ def clean_docker_files(docker_id: str, ) -> None:
             docker_id,
             "bash",
             "-c",
-            "rm -rf /home/openface-build/processed/*",
+            f"rm -rf {docker_processed_dir}/*",
         ]
     )
 
@@ -206,7 +206,7 @@ def run_openface(
 
     finally:
         # Docker内の作業ファイルを削除
-        clean_docker_files(docker_id)
+        clean_docker_files(docker_id, docker_workdir, docker_processed_dir)
         
         # temporary内のファイルを削除
         clean_openface_temporary(output_dir)
