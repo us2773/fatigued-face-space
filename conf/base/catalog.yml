@@ -9,3 +9,12 @@ openface_result:
   filename_suffix: ".parquet"
   dataset:
     type: pandas.ParquetDataset
+
+metadata_list: 
+  type: pandas.CSVDataset
+  filepath: data/01_raw/metadata_csv/metadata_${globals:metadata_file}.csv
+
+feature_list: 
+  type: pandas.CSVDataset
+  filepath: data/04_features_table/features_table.csv
+  versioned: true

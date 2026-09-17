@@ -2,6 +2,7 @@ openface:
   input_dir: data/01_raw/movie
   temporary_dir: data/02_intermediate/openface_temporary
   csv_dir: data/02_intermediate/openface_result
+  metadata_dir: data/02_intermediate/metadata_csv
 
 # サンプル
 # baseはGit追跡対象であるため、編集しない。また、ここに環境情報を記載しない。

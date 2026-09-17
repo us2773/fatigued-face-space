@@ -12,6 +12,9 @@ def register_pipelines() -> dict[str, Pipeline]:
         A mapping from pipeline names to ``Pipeline`` objects.
     """
     feature_extraction = pl.feature_extraction()
+    create_features_report = pl.create_features_report()
     return {
-        "__default__": feature_extraction,
+        "__default__": create_features_report,
+        "feature_extraction": feature_extraction
             }
+    

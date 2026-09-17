@@ -26,3 +26,15 @@ def feature_extraction(**kwargs) -> Pipeline:
                 name="run_openface",
             )
         ])
+    
+def create_features_report(**kwargs) -> Pipeline :
+    return Pipeline(
+        [
+            Node(
+                func=integrate_features_report,
+                inputs=["openface_result", "metadata_list"],
+                outputs="feature_list",
+                name="integrate_features_report"
+            )
+        ]
+    )
