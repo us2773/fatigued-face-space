@@ -1,7 +1,10 @@
 openface: 
   input_dir: data/01_raw/movie
   temporary_dir: data/02_intermediate/openface_temporary
-  csv_dir: data/02_intermediate/openface_result
+  result_dir: data/02_intermediate/openface_result
+  input_ext: /*mp4
+  temporary_ext: /*csv
+  result_ext: /*parquet
   metadata_dir: data/02_intermediate/metadata_csv
 
 # サンプル

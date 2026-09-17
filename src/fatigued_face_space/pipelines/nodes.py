@@ -18,14 +18,14 @@ def get_filenames_extention(inputdir: str, extention: str) -> list[str] :
     return results
 
 # Node: OpenFaceコマンド未実行動画の一覧を取得する関数
-def get_incomplete_movies(inputdir: str, result_dir: str) -> list[str]:
+def get_incomplete_movies(inputdir: str, result_dir: str, input_ext: str, result_expt: str) -> list[str]:
     # 01_raw/movie の中身をリスト化
-    all_movie = get_filenames_extention(inputdir, "/*mp4")
+    all_movie = get_filenames_extention(inputdir, input_ext)
     for path in all_movie:        
         print(path)
         
     # さらに02_intermediate/openface_result の中身もリスト化
-    all_openface_result = get_filenames_extention(result_dir,  "/*parquet")
+    all_openface_result = get_filenames_extention(result_dir, result_expt)
     for path in all_openface_result:        
         print(path)
     
@@ -92,13 +92,36 @@ def clean_docker_files(docker_id: str, docker_workdir: str, docker_processed_dir
     )
 
 # openface_temporaryのクリーンナップ
-def clean_openface_temporary(temporary_dir: str) :
+def clean_openface_temporary(temporary_dir: str) -> pd.DataFrame :
     ext = ".csv"
     rm_list = get_filenames_extention(temporary_dir, "/*"+ext)
     print(rm_list)
     
     for file in rm_list:  
         os.remove(temporary_dir+"/"+file+ext)
+
+def import_openface_files(incomplete_movies: list[str], output_dir: str) :
+    # 出力CSVの存在確認
+    missing_csv = []
+    for movie_name in incomplete_movies:
+        csv_path = output_dir + "/" + movie_name + ".csv"
+        if not os.path.isfile(csv_path):
+            missing_csv.append(os.path.basename(csv_path))
+
+    if missing_csv:
+        raise RuntimeError(
+            "OpenFace CSV not found: " + ", ".join(missing_csv)
+        )
+
+    # CSVからDataFrameへの変換
+    results = {}
+    for movie_name in incomplete_movies:
+        csv_path = output_dir + "/" + movie_name + ".csv"
+        results[movie_name] = pd.read_csv(
+            csv_path,
+            low_memory=False,
+        )
+    return results
             
 
 # Node: OpenFaceコマンドの実行関数
@@ -193,16 +216,7 @@ def run_openface(
                 "OpenFace CSV not found: " + ", ".join(missing_csv)
             )
 
-        # CSVからDataFrameへの変換
-        results = {}
-        for movie_name in incomplete_movies:
-            csv_path = output_dir + "/" + movie_name + ".csv"
-            results[movie_name] = pd.read_csv(
-                csv_path,
-                low_memory=False,
-            )
-
-        return results
+        return import_openface_files(incomplete_movies, output_dir)
 
     finally:
         # Docker内の作業ファイルを削除
