@@ -21,7 +21,31 @@ metadata_list:
   type: pandas.CSVDataset
   filepath: data/01_raw/metadata_csv/metadata_${globals:expt_name}.csv
 
-feature_list: 
-  type: pandas.CSVDataset
-  filepath: data/04_features_table/features_table.csv
+
+
+trend_mean_table:
+  type: pandas.ParquetDataset
+  filepath: data/04_feature/trend_mean.parquet
   versioned: true
+
+trend_var_table:
+  type: pandas.ParquetDataset
+  filepath: data/04_feature/trend_var.parquet
+  versioned: true
+
+peak_freq_table:
+  type: pandas.ParquetDataset
+  filepath: data/04_feature/peak_freq.parquet
+  versioned: true
+
+integrated_feature:
+  type: pandas.ParquetDataset
+  filepath: data/04_feature/integrated_feature.parquet
+  versioned: true
+
+features_table: 
+  type: pandas.CSVDataset
+  filepath: data/05_reporting/features_table.csv
+  versioned: true
+  save_args:
+    lineterminator: "\n"

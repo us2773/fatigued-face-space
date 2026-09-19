@@ -339,4 +339,65 @@ def integrate_features_report(partitions: dict[str, pd.DataFrame], metadata: pd.
         data.append(get_features(df, metadata, name))
     return pd.concat(data, axis=0, ignore_index=True)
 
+def get_movie_list(metadata: pd.DataFrame) -> list[str] :
+    return metadata["Name"].tolist()
+
+def trend_mean_table(partitions: dict[str, pd.DataFrame], movie_list: list[str]) :
+    column_mean = [f"AU{x:02}_trend_mean" for x in au_map_int]
+    result = pd.DataFrame(columns=column_mean)
     
+    for name in movie_list :
+        loader = partitions[name]
+        df = loader()
+        trend_mean_list = []
+        for au in range(17) :
+            
+            trend_est, _ = separate_AU_trend_noise(df, au)
+            trend_mean = trend_est.mean()
+            trend_mean_list.append(trend_mean)
+            
+        result = pd.concat([result, pd.DataFrame([trend_mean_list], columns=column_mean, index=[name])])
+    return result
+
+def trend_var_table(partitions: dict[str, pd.DataFrame], movie_list: list[str]) :
+    column_var = [f"AU{x:02}_trend_var" for x in au_map_int]
+    result = pd.DataFrame(columns=column_var)
+    
+    for name in movie_list :
+        loader = partitions[name]
+        df = loader()
+        trend_var_list = []
+        for au in range(17) :
+            
+            trend_est, _ = separate_AU_trend_noise(df, au)
+            trend_var = trend_est.var()
+            trend_var_list.append(trend_var)
+        result = pd.concat([result, pd.DataFrame([trend_var_list], columns=column_var, index=[name])])
+    return result
+
+def peak_freq_table(partitions: dict[str, pd.DataFrame], movie_list: list[str]) :
+    column_peakfreq = [f"AU{x:02}_peakfreq" for x in au_map_int]
+    result = pd.DataFrame(columns=column_peakfreq)
+    
+    for name in movie_list :
+        loader = partitions[name]
+        df = loader()
+        peak_freq_list = []
+        for au in range(17) :
+            
+            peaks, times = find_AU_peaks(df, au)
+            num = len(peaks)
+            if num == 0 :
+                f = 0
+            else :
+                f = float(times[-1] / num)
+            peak_freq_list.append(f)
+        result = pd.concat([result, pd.DataFrame([peak_freq_list], columns=column_peakfreq, index=[name])])
+    return result
+
+def integrate_features_table(*feature_tables: pd.DataFrame) :
+    return pd.concat(feature_tables, axis=1)
+
+def integrate_metadata(integrated_feature: pd.DataFrame, metadata: pd.DataFrame) :
+    metadata = metadata.set_index("Name")
+    return pd.concat([metadata, integrated_feature], axis=1)

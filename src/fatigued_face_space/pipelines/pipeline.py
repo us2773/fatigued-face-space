@@ -55,10 +55,41 @@ def create_features_report(**kwargs) -> Pipeline :
                 name="cleansing_dataframe"
             ),
             Node(
-                func=integrate_features_report,
-                inputs=["cleansed_openface", "metadata_list"],
-                outputs="feature_list",
-                name="integrate_features_report"
+                func=get_movie_list,
+                inputs="metadata_list",
+                outputs="movie_list",
+                name="get_movie_list"
+            ),
+            Node(
+                func=trend_mean_table,
+                inputs=["cleansed_openface", "movie_list"],
+                outputs="trend_mean_table",
+                name="trend_mean_table"
+                ),
+            Node(
+                func=trend_var_table,
+                inputs=["cleansed_openface", "movie_list"],
+                outputs="trend_var_table",
+                name="trend_var_table"
+                ),
+            Node(
+                func=peak_freq_table,
+                inputs=["cleansed_openface", "movie_list"],
+                outputs="peak_freq_table",
+                name="peak_freq_table"
+                ),
+            
+            Node(
+                func=integrate_features_table,
+                inputs=["trend_mean_table","trend_var_table", "peak_freq_table"],
+                outputs="integrated_feature",
+                name="integrate_features_table"
+            ),
+            Node(
+                func=integrate_metadata,
+                inputs=["integrated_feature", "metadata_list"],
+                outputs="features_table",
+                name="integrate_metadata"
             )
         ]
     )
