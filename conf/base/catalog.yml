@@ -48,4 +48,5 @@ features_table:
   filepath: data/05_reporting/features_table.csv
   versioned: true
   save_args:
+    index: true
     lineterminator: "\n"
