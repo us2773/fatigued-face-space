@@ -21,8 +21,6 @@ metadata_list:
   type: pandas.CSVDataset
   filepath: data/01_raw/metadata_csv/metadata_${globals:expt_name}.csv
 
-
-
 trend_mean_table:
   type: pandas.ParquetDataset
   filepath: data/04_feature/trend_mean.parquet
@@ -49,4 +47,4 @@ features_table:
   versioned: true
   save_args:
     index: true
-    lineterminator: "\n"
+    lineterminator: "\n" #csv化の際に行間に空白行が生じるのを防止
