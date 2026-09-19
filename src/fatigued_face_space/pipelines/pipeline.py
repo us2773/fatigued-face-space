@@ -49,8 +49,14 @@ def create_features_report(**kwargs) -> Pipeline :
     return Pipeline(
         [
             Node(
+                func=cleansing_dataframe,
+                inputs=["openface_result"],
+                outputs="cleansed_openface",
+                name="cleansing_dataframe"
+            ),
+            Node(
                 func=integrate_features_report,
-                inputs=["openface_result", "metadata_list"],
+                inputs=["cleansed_openface", "metadata_list"],
                 outputs="feature_list",
                 name="integrate_features_report"
             )

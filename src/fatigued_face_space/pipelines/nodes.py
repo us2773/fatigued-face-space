@@ -126,6 +126,28 @@ def import_openface_files(incomplete_movies: list[str], output_dir: str) :
     clean_openface_temporary(output_dir)
     return results
             
+# CSVをクレンジングしDataFrameを取得
+def cleansing_dataframe(
+    partitions: dict[str, pd.DataFrame]
+) -> dict[str, pd.DataFrame]:
+
+    dfs = {}
+
+    for name, loader in partitions.items():
+        df = loader()
+        df = df[(df[" success"] == 0) | (df[" success"] == 1)]
+
+        movie_name = os.path.splitext(
+            os.path.basename(name)
+        )[0]
+
+        df["movie_name"] = movie_name
+
+        dfs[name] = df
+
+        print(f"name:{name}")
+
+    return dfs 
 
 # Node: OpenFaceコマンドの実行関数
 # OpenFace実行結果は一時ディレクトリに保存
@@ -240,34 +262,6 @@ def separate_AU_trend_noise(df: pd.DataFrame, plot_num: int) -> tuple[np.ndarray
     residual = AUR_row - trend_est
     return (trend_est, residual)
 
-# 全てのAU時系列のトレンド平均・分散、ノイズ平均・分散を算出
-def get_trend_noise(df: pd.DataFrame)-> dict:
-    
-    lst_AUR_moving_mean = []
-    lst_AUR_moving_var = []
-    lst_AUR_residual_mean = []
-    lst_AUR_residual_var = []
-    
-    # AU種数分だけループ
-    for plot_num in range(17) :
-        trend_est, residual = separate_AU_trend_noise(df, plot_num)
-
-        # 統計情報
-        AUR_moving_mean = float(trend_est.mean())
-        AUR_moving_var = float(trend_est.var())
-        AUR_residual_mean = float(residual.mean())
-        AUR_residual_var = float(residual.var())
-        
-        lst_AUR_moving_mean.append(AUR_moving_mean)
-        lst_AUR_moving_var.append(AUR_moving_var)
-        lst_AUR_residual_mean.append(AUR_residual_mean)
-        lst_AUR_residual_var.append(AUR_residual_var)
-
-    result_dict = {"AUR_moving_mean": lst_AUR_moving_mean, "AUR_moving_var": lst_AUR_moving_var,"AUR_residual_mean": lst_AUR_residual_mean, "AUR_residual_var": lst_AUR_residual_var}
-    
-    
-    return result_dict
-
 # 指定したAU時系列のピーク点出現頻度の算出
 def find_AU_peaks(df: pd.DataFrame, plot_num: int) -> tuple[list, list]:
     au_col = df.columns.get_loc(" AU01_r") + plot_num
@@ -276,26 +270,6 @@ def find_AU_peaks(df: pd.DataFrame, plot_num: int) -> tuple[list, list]:
 
     peaks, _ = find_peaks(signal, height=0.1, distance=5, prominence=0.1)
     return peaks, times
-
-# 全てのAU時系列のピーク点出現回数・頻度を算出
-def get_AU_peak(df: pd.DataFrame)-> dict[list, float]:
-    lst_num = []
-    lst_f = []
-    for plot_num in range(17):
-        peaks, times = find_AU_peaks(df, plot_num)
-
-        num = len(peaks)
-        # print(num)
-        if num == 0 :
-            f = 0
-        else :
-            f = float(times[-1] / num)
-        
-        lst_num.append(num)
-        lst_f.append(f)
-        
-    result_dict = {"num": lst_num, "freq": lst_f}
-    return result_dict
 
 # 動画名からmetadataを取得する関数
 def get_metadata_by_movie(df, movie_name) :
@@ -353,8 +327,7 @@ def get_features(df, metadata_list,  movie_name) :
     return result
 
 # 動画名とAUデータから特徴量一覧CSVを算出する関数
-# partitionsを正本としているが、metadataを正本としたい
-# partitionsが膨大になるので、metadataに含まれているparquetのみをまとめて次のディレクトリに送るNodeが必要
+# この関数の引数に各特徴量DataFrameを渡す
 def integrate_features_report(partitions: dict[str, pd.DataFrame], metadata: pd.DataFrame) :
     data = []
     movie_list = metadata["Name"].tolist()
