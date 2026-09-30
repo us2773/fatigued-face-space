@@ -21,6 +21,7 @@ def feature_extraction(**kwargs) -> Pipeline:
                     "params:docker.docker_workdir",
                     "params:docker.docker_processed_dir",
                     "params:docker.feature_extraction",
+                    "params:au_model"
                     ],
                 outputs="openface_result",
                 name="run_openface",

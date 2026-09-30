@@ -4,6 +4,8 @@ openface:
   csv_dir: data/02_intermediate/openface_result
   metadata_dir: data/02_intermediate/metadata_csv
 
+au_model: statics
+
 # サンプル
 # baseはGit追跡対象であるため、編集しない。また、ここに環境情報を記載しない。
 # 下記をconf/local/parameters.ymlにコピペする。

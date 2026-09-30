@@ -112,6 +112,7 @@ def run_openface(
     docker_workdir: str,
     docker_processed_dir: str,
     feature_extraction: str,
+    au_model: str,
 ) -> dict[str, pd.DataFrame]:
     # 未処理動画がない場合の終了
     if not incomplete_movies:
@@ -161,7 +162,7 @@ def run_openface(
                     feature_extraction,
                     "-f",
                     docker_movie_path,
-                    "-au_static",
+                    f"-au_{au_model}",
                 ]
             )
 
