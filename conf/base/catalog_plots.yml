@@ -1,0 +1,15 @@
+trend_noise_plots:
+  type: matplotlib.MatplotlibDataset
+  filepath: data/06_plot/trend_noise
+  versioned: true
+  save_args:
+    format: png
+    dpi: 120
+
+peak_plots:
+  type: matplotlib.MatplotlibDataset
+  filepath: data/06_plot/peak
+  versioned: true
+  save_args:
+    format: png
+    dpi: 120
