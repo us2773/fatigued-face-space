@@ -7,7 +7,7 @@ def feature_extraction(**kwargs) -> Pipeline:
         [
             Node(
                 func=get_incomplete_movies,
-                inputs=["params:openface.input_dir","params:openface.result_dir", "params:openface.import_dir", "params:openface.result_dir"],
+                inputs=["params:openface.input_dir","params:openface.result_dir", "params:openface.input_ext", "params:openface.result_dir"],
                 outputs="incomplete_movies",
                 name="get_incomplete_movies",
             ),
