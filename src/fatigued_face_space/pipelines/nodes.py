@@ -30,11 +30,13 @@ def get_incomplete_movies(
     
     # 01_raw/movie の中身をリスト化
     all_movie = get_filenames_extention(inputdir, input_ext)
+    print("01_raw/movie")
     for path in all_movie:        
         print(path)
         
     # さらに02_intermediate/openface_result の中身もリスト化
     all_openface_result = get_filenames_extention(output_dir, result_expt)
+    print("02_intermediate/openface_result")
     for path in all_openface_result:        
         print(path)
     
@@ -44,6 +46,7 @@ def get_incomplete_movies(
         if path not in all_openface_result :
             results.append(path)
 
+    print("result")
     print(results)
     return results
 
@@ -275,14 +278,15 @@ def run_openface(
 # 指定したAU時系列のトレンドとノイズを分離
 def separate_AU_trend_noise(
     df: pd.DataFrame, 
-    plot_num: int
+    plot_num: int,
+    frac: float = 0.1
     ) -> tuple[np.ndarray, np.ndarray] :
     
     AUR_start = df.columns.get_loc(" AU01_r")
     AUR_row = df.iloc[:, AUR_start + plot_num]
         
     # LOWESSによるトレンド抽出
-    trend_est = lowess(AUR_row, df[" timestamp"], frac=0.1, return_sorted=False)
+    trend_est = lowess(AUR_row, df[" timestamp"], frac=frac, return_sorted=False)
     # 残差計算
     residual = AUR_row - trend_est
     return (trend_est, residual)
@@ -290,14 +294,17 @@ def separate_AU_trend_noise(
 # 指定したAU時系列のピーク点出現頻度の算出
 def find_AU_peaks(
     df: pd.DataFrame, 
-    plot_num: int
+    plot_num: int,
+    height: float,
+    distance: float, 
+    prominence: float
     ) -> tuple[list, list]:
     
     au_col = df.columns.get_loc(" AU01_r") + plot_num
     signal = df.iloc[:, au_col].values
     times = df[" timestamp"].values
 
-    peaks, _ = find_peaks(signal, height=0.1, distance=5, prominence=0.1)
+    peaks, _ = find_peaks(signal, height=height, distance=distance, prominence=prominence)
     return peaks, times
 
 # Node: metadataから動画名のみを抽出
@@ -310,7 +317,8 @@ def get_movie_list(
 # Node: トレンド平均を算出
 def trend_mean_table(
     partitions: dict[str, pd.DataFrame], 
-    movie_list: list[str]
+    movie_list: list[str],
+    frac: float
     ) -> pd.DataFrame :
     
     column_mean = [f"AU{x:02}_trend_mean" for x in au_map_int]
@@ -322,7 +330,7 @@ def trend_mean_table(
         trend_mean_list = []
         for au in au_index :
             
-            trend_est, _ = separate_AU_trend_noise(df, au)
+            trend_est, _ = separate_AU_trend_noise(df, au, frac)
             trend_mean = trend_est.mean()
             trend_mean_list.append(trend_mean)
             
@@ -332,7 +340,8 @@ def trend_mean_table(
 # Node: トレンド分散を算出
 def trend_var_table(
     partitions: dict[str, pd.DataFrame], 
-    movie_list: list[str]
+    movie_list: list[str],
+    frac: float
     )  -> pd.DataFrame :
     
     column_var = [f"AU{x:02}_trend_var" for x in au_map_int]
@@ -344,7 +353,7 @@ def trend_var_table(
         trend_var_list = []
         for au in au_index :
             
-            trend_est, _ = separate_AU_trend_noise(df, au)
+            trend_est, _ = separate_AU_trend_noise(df, au, frac)
             trend_var = trend_est.var()
             trend_var_list.append(trend_var)
         result = pd.concat([result, pd.DataFrame([trend_var_list], columns=column_var, index=[name])])
@@ -353,7 +362,10 @@ def trend_var_table(
 # Node: ピーク点出現頻度を算出
 def peak_freq_table(
     partitions: dict[str, pd.DataFrame], 
-    movie_list: list[str]
+    movie_list: list[str],
+    height: float,
+    distance: float, 
+    prominence: float
     ) -> pd.DataFrame :
     column_peakfreq = [f"AU{x:02}_peakfreq" for x in au_map_int]
     result = pd.DataFrame(columns=column_peakfreq)
@@ -364,7 +376,7 @@ def peak_freq_table(
         peak_freq_list = []
         for au in au_index :
             
-            peaks, times = find_AU_peaks(df, au)
+            peaks, times = find_AU_peaks(df, au, height, distance, prominence)
             num = len(peaks)
             if num == 0 :
                 f = 0
