@@ -62,13 +62,13 @@ def create_features_report(**kwargs) -> Pipeline :
             ),
             Node(
                 func=trend_mean_table,
-                inputs=["cleansed_openface", "movie_list", "params:trend.frac"],
+                inputs=["cleansed_openface", "movie_list", "params:trend.frac", "params:trend.it", "params:trend.delta", "params:trend.return_sorted"],
                 outputs="trend_mean_table",
                 name="trend_mean_table"
                 ),
             Node(
                 func=trend_var_table,
-                inputs=["cleansed_openface", "movie_list", "params:trend.frac"],
+                inputs=["cleansed_openface", "movie_list", "params:trend.frac", "params:trend.it", "params:trend.delta", "params:trend.return_sorted"],
                 outputs="trend_var_table",
                 name="trend_var_table"
                 ),

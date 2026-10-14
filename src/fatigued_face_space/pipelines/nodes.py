@@ -279,14 +279,17 @@ def run_openface(
 def separate_AU_trend_noise(
     df: pd.DataFrame, 
     plot_num: int,
-    frac: float = 0.1
+    frac: float,
+    it: int,
+    delta: float,
+    return_sorted: bool
     ) -> tuple[np.ndarray, np.ndarray] :
     
     AUR_start = df.columns.get_loc(" AU01_r")
     AUR_row = df.iloc[:, AUR_start + plot_num]
         
     # LOWESSによるトレンド抽出
-    trend_est = lowess(AUR_row, df[" timestamp"], frac=frac, return_sorted=False)
+    trend_est = lowess(AUR_row, df[" timestamp"], frac=frac, it=it, delta=delta, return_sorted=return_sorted)
     # 残差計算
     residual = AUR_row - trend_est
     return (trend_est, residual)
@@ -318,7 +321,10 @@ def get_movie_list(
 def trend_mean_table(
     partitions: dict[str, pd.DataFrame], 
     movie_list: list[str],
-    frac: float
+    frac: float,
+    it: int,
+    delta: float,
+    return_sorted: bool
     ) -> pd.DataFrame :
     
     column_mean = [f"AU{x:02}_trend_mean" for x in au_map_int]
@@ -330,7 +336,7 @@ def trend_mean_table(
         trend_mean_list = []
         for au in au_index :
             
-            trend_est, _ = separate_AU_trend_noise(df, au, frac)
+            trend_est, _ = separate_AU_trend_noise(df, au, frac, it, delta, return_sorted)
             trend_mean = trend_est.mean()
             trend_mean_list.append(trend_mean)
             
@@ -341,7 +347,10 @@ def trend_mean_table(
 def trend_var_table(
     partitions: dict[str, pd.DataFrame], 
     movie_list: list[str],
-    frac: float
+    frac: float,
+    it: int,
+    delta: float,
+    return_sorted: bool
     )  -> pd.DataFrame :
     
     column_var = [f"AU{x:02}_trend_var" for x in au_map_int]
@@ -353,7 +362,7 @@ def trend_var_table(
         trend_var_list = []
         for au in au_index :
             
-            trend_est, _ = separate_AU_trend_noise(df, au, frac)
+            trend_est, _ = separate_AU_trend_noise(df, au, frac, it, delta, return_sorted)
             trend_var = trend_est.var()
             trend_var_list.append(trend_var)
         result = pd.concat([result, pd.DataFrame([trend_var_list], columns=column_var, index=[name])])

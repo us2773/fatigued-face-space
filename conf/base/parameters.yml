@@ -10,6 +10,9 @@ openface:
 
 trend:
   frac: 0.1
+  it: 3
+  delta: 0.0
+  return_sorted: false
 
 peak:
   height: 0.1
