@@ -1,8 +1,15 @@
 """Project pipelines."""
+
 from __future__ import annotations
 
 from kedro.pipeline import Pipeline
-import fatigued_face_space.pipelines.pipeline as pl
+
+from fatigued_face_space.pipelines.pipeline import (
+    create_features_report,
+    feature_extraction,
+    import_external_csv,
+)
+from fatigued_face_space.pipelines.plots.pipeline import create_au_plots
 
 
 def register_pipelines() -> dict[str, Pipeline]:
@@ -11,12 +18,11 @@ def register_pipelines() -> dict[str, Pipeline]:
     Returns:
         A mapping from pipeline names to ``Pipeline`` objects.
     """
-    feature_extraction = pl.feature_extraction()
-    create_features_report = pl.create_features_report()
-    import_external_csv = pl.import_external_csv()
+    features_report_pipeline = create_features_report()
+
     return {
-        "__default__": create_features_report,
-        "feature_extraction": feature_extraction,
-        "external_csv": import_external_csv
-            }
-    
+        "__default__": features_report_pipeline,
+        "feature_extraction": feature_extraction(),
+        "external_csv": import_external_csv(),
+        "au_plots": create_au_plots(),
+    }
