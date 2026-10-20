@@ -93,3 +93,60 @@ def create_features_report(**kwargs) -> Pipeline :
             )
         ]
     )
+    
+def daily_feature_report(**kwargs) -> Pipeline:
+    return Pipeline(
+        [
+            Node(
+                func=get_incomplete_movies,
+                inputs=["params:openface.input_dir","params:openface.result_dir", "params:openface.input_ext", "params:openface.result_ext"],
+                outputs="incomplete_movies",
+                name="get_incomplete_movies",
+            ),
+            Node(
+                func=run_openface,
+                inputs=[
+                    "params:openface.input_dir",
+                    "params:openface.temporary_dir",
+                    "incomplete_movies",
+                    "params:docker.docker_id",
+                    "params:docker.docker_workdir",
+                    "params:docker.docker_processed_dir",
+                    "params:docker.feature_extraction",
+                    ],
+                outputs="openface_result",
+                name="run_openface",
+            ),
+            Node(
+                func=cleansing_dataframe,
+                inputs=["openface_result"],
+                outputs="cleansed_openface",
+                name="cleansing_dataframe"
+            ),
+
+            Node(
+                func=trend_mean_table,
+                inputs=["cleansed_openface", "incomplete_movies", "params:trend.frac", "params:trend.it", "params:trend.delta", "params:trend.return_sorted"],
+                outputs="trend_mean_table",
+                name="trend_mean_table"
+                ),
+            Node(
+                func=trend_var_table,
+                inputs=["cleansed_openface", "incomplete_movies", "params:trend.frac", "params:trend.it", "params:trend.delta", "params:trend.return_sorted"],
+                outputs="trend_var_table",
+                name="trend_var_table"
+                ),
+            Node(
+                func=peak_freq_table,
+                inputs=["cleansed_openface", "incomplete_movies", "params:peak.height", "params:peak.distance", "params:peak.prominence"],
+                outputs="peak_freq_table",
+                name="peak_freq_table"
+                ),
+            
+            Node(
+                func=integrate_features_table,
+                inputs=["trend_mean_table","trend_var_table", "peak_freq_table"],
+                outputs="features_table",
+                name="integrate_features_table"
+            ),
+        ])
