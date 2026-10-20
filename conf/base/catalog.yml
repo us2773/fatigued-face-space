@@ -17,6 +17,13 @@ cleansed_openface:
   dataset:
     type: pandas.ParquetDataset
 
+trend_residual_table:
+  type: partitions.PartitionedDataset
+  path: data/04_feature/trend_residual
+  filename_suffix: ".parquet"
+  dataset:
+    type: pandas.ParquetDataset
+
 metadata_list: 
   type: pandas.CSVDataset
   filepath: data/01_raw/metadata_csv/metadata_${globals:expt_name}.csv
