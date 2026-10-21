@@ -82,31 +82,58 @@ def trend_var_table_sepalated(
 
 
 # Node: ピーク点出現頻度を算出
-def peak_freq_table_residual(
+def get_peak_freq(
     partitions: dict[str, pd.DataFrame], 
     movie_list: list[str],
     height: float,
     distance: float, 
     prominence: float
-    ) -> pd.DataFrame :
-    column_peakfreq = [f"AU{x:02}_peakfreq" for x in au_map_int]
-    result = pd.DataFrame(columns=column_peakfreq)
+    ) -> dict[str, pd.DataFrame] :
+    
+    dfs: dict = {}
     
     for name in movie_list :
         loader = partitions[name]
         df = loader()
-        peak_freq_list = []
+        result_data: dict = {}
+        
         for au in au_map_int :
             df_series = df[f"AU{au:02}_residual"]
             signal = df_series.values  
             times = df["timestamp"].values
 
             peaks, _ = find_peaks(signal, height=height, distance=distance, prominence=prominence)
-            num = len(peaks)
-            if num == 0 :
-                f = 0
-            else :
-                f = float(times[-1] / num)
-            peak_freq_list.append(f)
-        result = pd.concat([result, pd.DataFrame([peak_freq_list], columns=column_peakfreq, index=[name])])
-    return result
+            result_data[f"AU{au:02}_peakfreq"] = pd.Series(times[peaks], dtype="float64") # Seriesを結合する場合、データ長の不一致によるエラーは起きない
+            
+        dfs[name] = pd.DataFrame(result_data)
+    return dfs
+
+
+
+def peak_freq_table_residual(
+    peak_partitions: dict[str, pd.DataFrame], 
+    tr_partitions: dict[str, pd.DataFrame], 
+    movie_list: list[str], 
+    ) :
+    
+    column_peakfreq = [f"AU{x:02}_peakfreq" for x in au_map_int]
+    
+    rows = {}
+
+    for name in movie_list:
+        peak_df = peak_partitions[name]()
+        trend_df = tr_partitions[name]()
+        
+        # peakfreq_tableはピーク点のある時刻しか持ってない
+        # 全体の撮影時刻はtrend_residual_tableから取得
+        end_time = trend_df["timestamp"].iloc[-1]
+
+        values = []
+        for au in au_map_int:
+            num = peak_df[f"AU{au:02}_peakfreq"].count()
+            values.append(0 if num == 0 else float(num / end_time))
+
+        rows[name] = values
+
+    return pd.DataFrame.from_dict(rows, orient="index", columns=column_peakfreq)
+

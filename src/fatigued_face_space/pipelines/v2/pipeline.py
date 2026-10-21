@@ -1,17 +1,7 @@
 from kedro.pipeline import Node, Pipeline
 
-from ..nodes import (
-    cleansing_dataframe,
-    get_movie_list,
-    integrate_features_table,
-    integrate_metadata,
-)
-from .nodes import (
-    peak_freq_table_residual,
-    sepalate_trend_residual,
-    trend_mean_table_sepalated,
-    trend_var_table_sepalated,
-)
+from ..nodes import *
+from .nodes import *
 
 
 def create_features_report_v2(**kwargs) -> Pipeline :
@@ -48,11 +38,17 @@ def create_features_report_v2(**kwargs) -> Pipeline :
                 name="trend_var_table"
                 ),
             Node(
-                func=peak_freq_table_residual,
+                func=get_peak_freq,
                 inputs=["trend_residual_table", "movie_list", "params:peak.height", "params:peak.distance", "params:peak.prominence"],
-                outputs="peak_freq_table",
-                name="peak_freq_table"
+                outputs="peak_freq_series",
+                name="get_peak_freq"
                 ),
+            Node(
+                func=peak_freq_table_residual,
+                inputs=["peak_freq_series","trend_residual_table", "movie_list"],
+                outputs="peak_freq_table",
+                name="peak_freq_table_residual"
+            ),
             
             Node(
                 func=integrate_features_table,

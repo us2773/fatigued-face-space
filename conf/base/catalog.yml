@@ -38,7 +38,14 @@ trend_var_table:
   filepath: data/04_feature/trend_var.parquet
   versioned: true
 
-peak_freq_table:
+peak_freq_series:
+  type: partitions.PartitionedDataset
+  path: data/04_feature/peak_freq_series
+  filename_suffix: ".parquet"
+  dataset:
+    type: pandas.ParquetDataset
+
+peak_freq_table: 
   type: pandas.ParquetDataset
   filepath: data/04_feature/peak_freq.parquet
   versioned: true
