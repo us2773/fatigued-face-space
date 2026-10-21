@@ -1,14 +1,12 @@
-"""Create diagnostic plots from cleansed OpenFace AU time series."""
+"""Create diagnostic plots from OpenFace AU time series."""
 
 from collections.abc import Callable, Mapping
 
-import numpy as np
 import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from ..au_map import au_map_int
-from ..nodes import find_AU_peaks, separate_AU_trend_noise
 
 
 def _plot_output_key(movie_name: str, au_number: int) -> str:
@@ -36,19 +34,21 @@ def _create_au_figure(
 
 def create_trend_noise_plots(
     partitions: Mapping[str, Callable[[], pd.DataFrame]],
+    trend_residual_partitions: Mapping[str, Callable[[], pd.DataFrame]],
     movie_list: list[str],
-    frac: float,
 ) -> dict[str, Figure]:
-    """Plot the raw AU signal, its LOWESS trend, and the residual for each movie."""
+    """Plot the raw AU signal, stored LOWESS trend, and residual for each movie."""
     trend_noise_figures: dict[str, Figure] = {}
 
     for movie_name in movie_list:
         df = partitions[movie_name]()
-        times = df[" timestamp"].to_numpy()
+        trend_residual_df = trend_residual_partitions[movie_name]()
+        times = trend_residual_df["timestamp"].to_numpy()
 
-        for au_index, au_number in enumerate(au_map_int):
+        for au_number in au_map_int:
             signal = df[f" AU{au_number:02}_r"].to_numpy()
-            trend, residual = separate_AU_trend_noise(df, au_index, frac)
+            trend = trend_residual_df[f"AU{au_number:02}_trend"].to_numpy()
+            residual = trend_residual_df[f"AU{au_number:02}_residual"].to_numpy()
 
             figure, axes = _create_au_figure(movie_name, au_number, "Trend and noise")
             axes.plot(times, signal, color="#808080", linewidth=1, label="Raw data")
@@ -71,34 +71,51 @@ def create_trend_noise_plots(
 
 def create_peak_plots(
     partitions: Mapping[str, Callable[[], pd.DataFrame]],
+    trend_residual_partitions: Mapping[str, Callable[[], pd.DataFrame]],
+    peak_partitions: Mapping[str, Callable[[], pd.DataFrame]],
     movie_list: list[str],
-    height: float,
-    distance: float,
-    prominence: float,
 ) -> dict[str, Figure]:
-    """Plot the raw AU signal and peaks found with the feature pipeline settings."""
+    """Plot raw AU signals, residuals, and stored residual peaks."""
     peak_figures: dict[str, Figure] = {}
 
     for movie_name in movie_list:
         df = partitions[movie_name]()
+        trend_residual_df = trend_residual_partitions[movie_name]()
+        peak_df = peak_partitions[movie_name]()
+        times = trend_residual_df["timestamp"].to_numpy()
+        time_index = pd.Index(times)
 
-        for au_index, au_number in enumerate(au_map_int):
+        for au_number in au_map_int:
             signal = df[f" AU{au_number:02}_r"].to_numpy()
-            peaks, times = find_AU_peaks(df, au_index, height, distance, prominence)
+            residual = trend_residual_df[f"AU{au_number:02}_residual"].to_numpy()
+            peak_times = peak_df[f"AU{au_number:02}_peakfreq"].dropna().to_numpy()
+            peak_indices = time_index.get_indexer(peak_times)
+            if (peak_indices < 0).any():
+                raise ValueError(
+                    f"Stored peak timestamp not found for {movie_name} AU{au_number:02}"
+                )
 
             figure, axes = _create_au_figure(movie_name, au_number, "Detected peaks")
-            axes.plot(times, signal, color="#1f77b4", linewidth=1.2, label="Raw data")
+            axes.plot(
+                times, signal, color="#808080", alpha=0.35, linewidth=1,
+                label="Raw data",
+            )
+            axes.plot(
+                times, residual, color="#1f77b4", linewidth=1.5,
+                label="Residual",
+            )
             axes.scatter(
-                np.asarray(times)[peaks],
-                signal[peaks],
+                peak_times,
+                residual[peak_indices],
                 color="#d62728",
+                marker="o",
                 edgecolors="white",
                 linewidths=0.8,
                 s=55,
                 zorder=3,
-                label=f"Detected peaks ({len(peaks)})",
+                label=f"Detected peaks ({len(peak_times)})",
             )
-            if len(peaks) == 0:
+            if len(peak_times) == 0:
                 axes.text(
                     0.98,
                     0.95,

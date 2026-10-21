@@ -18,7 +18,7 @@ def create_au_plots() -> Pipeline:
             ),
             node(
                 func=create_trend_noise_plots,
-                inputs=["cleansed_openface", "plot_movie_list", "params:trend.frac"],
+                inputs=["cleansed_openface", "trend_residual_table", "plot_movie_list"],
                 outputs="trend_noise_plots",
                 name="create_trend_noise_plots",
             ),
@@ -26,10 +26,9 @@ def create_au_plots() -> Pipeline:
                 func=create_peak_plots,
                 inputs=[
                     "cleansed_openface",
+                    "trend_residual_table",
+                    "peak_freq_series",
                     "plot_movie_list",
-                    "params:peak.height",
-                    "params:peak.distance",
-                    "params:peak.prominence",
                 ],
                 outputs="peak_plots",
                 name="create_peak_plots",
