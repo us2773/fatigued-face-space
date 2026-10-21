@@ -3,7 +3,7 @@
 from kedro.pipeline import Pipeline, node
 
 from ..nodes import get_movie_list
-from .nodes import create_peak_plots, create_trend_noise_plots
+from .nodes import create_peak_plots, create_trend_residual_plots
 
 
 def create_au_plots() -> Pipeline:
@@ -12,22 +12,22 @@ def create_au_plots() -> Pipeline:
         [
             node(
                 func=get_movie_list,
-                inputs="metadata_list",
+                inputs="movie_metadata",
                 outputs="plot_movie_list",
                 name="plot_get_movie_list",
             ),
             node(
-                func=create_trend_noise_plots,
-                inputs=["cleansed_openface", "trend_residual_table", "plot_movie_list"],
-                outputs="trend_noise_plots",
-                name="create_trend_noise_plots",
+                func=create_trend_residual_plots,
+                inputs=["cleansed_openface_timeseries", "trend_residual_timeseries", "plot_movie_list"],
+                outputs="trend_residual_plots",
+                name="create_trend_residual_plots",
             ),
             node(
                 func=create_peak_plots,
                 inputs=[
-                    "cleansed_openface",
-                    "trend_residual_table",
-                    "peak_freq_series",
+                    "cleansed_openface_timeseries",
+                    "trend_residual_timeseries",
+                    "peak_timeseries",
                     "plot_movie_list",
                 ],
                 outputs="peak_plots",

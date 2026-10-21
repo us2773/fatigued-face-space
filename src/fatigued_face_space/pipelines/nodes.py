@@ -8,12 +8,12 @@ from statsmodels.nonparametric.smoothers_lowess import lowess
 from .au_map import *
 
 # 任意のディレクトリから指定した拡張子のファイルの名前を一覧取得
-def get_filenames_extention(
+def get_filenames_by_extension(
     inputdir: str, 
-    extention: str
+    extension: str
     ) -> list[str] :
     
-    all_movie = glob.glob(inputdir + extention)
+    all_movie = glob.glob(inputdir + extension)
     results = []
     for path in all_movie:
         movie_name = os.path.splitext(os.path.basename(path))[0]
@@ -25,17 +25,17 @@ def get_incomplete_movies(
     inputdir: str, 
     output_dir: str, 
     input_ext: str, 
-    result_expt: str
+    result_ext: str
     ) -> list[str]:
     
     # 01_raw/movie の中身をリスト化
-    all_movie = get_filenames_extention(inputdir, input_ext)
+    all_movie = get_filenames_by_extension(inputdir, input_ext)
     print("01_raw/movie")
     for path in all_movie:        
         print(path)
         
     # さらに02_intermediate/openface_result の中身もリスト化
-    all_openface_result = get_filenames_extention(output_dir, result_expt)
+    all_openface_result = get_filenames_by_extension(output_dir, result_ext)
     print("02_intermediate/openface_result")
     for path in all_openface_result:        
         print(path)
@@ -116,14 +116,14 @@ def clean_openface_temporary(
     ) -> None :
     
     ext = ".csv"
-    rm_list = get_filenames_extention(temporary_dir, "/*"+ext)
+    rm_list = get_filenames_by_extension(temporary_dir, "/*"+ext)
     print(rm_list)
     
     for file in rm_list:  
         os.remove(temporary_dir+"/"+file+ext)
 
 # 一時ディレクトリを読み出してpd.DataFrameを返すことでフレームワークが出力を認識
-def import_openface_files(
+def get_openface_from_csv_timeseries(
     incomplete_movies: list[str],
     output_dir: str
     ) -> dict[str, pd.DataFrame] :
@@ -153,7 +153,7 @@ def import_openface_files(
     return results
             
 # CSVをクレンジングしDataFrameを取得
-def cleansing_dataframe(
+def get_cleansed_openface_timeseries(
     partitions: dict[str, pd.DataFrame]
 ) -> dict[str, pd.DataFrame]:
 
@@ -177,7 +177,7 @@ def cleansing_dataframe(
 
 # Node: OpenFaceコマンドの実行関数
 # OpenFace実行結果は一時ディレクトリに保存
-def run_openface(
+def get_openface_from_video_timeseries(
     input_dir: str,
     output_dir:str,
     incomplete_movies: list[str],
@@ -267,7 +267,7 @@ def run_openface(
                 "OpenFace CSV not found: " + ", ".join(missing_csv)
             )
 
-        return import_openface_files(incomplete_movies, output_dir)
+        return get_openface_from_csv_timeseries(incomplete_movies, output_dir)
 
     finally:
         # Docker内の作業ファイルを削除
@@ -276,8 +276,8 @@ def run_openface(
         # temporary内のファイルを削除
         clean_openface_temporary(output_dir)
 
-# 指定したAU時系列のトレンドとノイズを分離
-def separate_AU_trend_noise(
+# 指定したAU時系列のトレンドと残差を分離
+def separate_au_trend_residual(
     df: pd.DataFrame, 
     plot_num: int,
     frac: float,
@@ -295,8 +295,8 @@ def separate_AU_trend_noise(
     residual = AUR_row - trend_est
     return (trend_est, residual)
 
-# 指定したAU時系列のピーク点出現頻度の算出
-def find_AU_peaks(
+# 指定したAU時系列のピーク点を取得
+def find_au_peaks(
     df: pd.DataFrame, 
     plot_num: int,
     height: float,
@@ -319,7 +319,7 @@ def get_movie_list(
     return metadata["Name"].tolist()
 
 # Node: トレンド平均を算出
-def trend_mean_table(
+def get_trend_mean_feature(
     partitions: dict[str, pd.DataFrame], 
     movie_list: list[str],
     frac: float,
@@ -337,7 +337,7 @@ def trend_mean_table(
         trend_mean_list = []
         for au in au_index :
             
-            trend_est, _ = separate_AU_trend_noise(df, au, frac, it, delta, return_sorted)
+            trend_est, _ = separate_au_trend_residual(df, au, frac, it, delta, return_sorted)
             trend_mean = trend_est.mean()
             trend_mean_list.append(trend_mean)
             
@@ -345,7 +345,7 @@ def trend_mean_table(
     return result
 
 # Node: トレンド分散を算出
-def trend_var_table(
+def get_trend_var_feature(
     partitions: dict[str, pd.DataFrame], 
     movie_list: list[str],
     frac: float,
@@ -363,14 +363,14 @@ def trend_var_table(
         trend_var_list = []
         for au in au_index :
             
-            trend_est, _ = separate_AU_trend_noise(df, au, frac, it, delta, return_sorted)
+            trend_est, _ = separate_au_trend_residual(df, au, frac, it, delta, return_sorted)
             trend_var = trend_est.var()
             trend_var_list.append(trend_var)
         result = pd.concat([result, pd.DataFrame([trend_var_list], columns=column_var, index=[name])])
     return result
 
 # Node: ピーク点出現頻度を算出
-def peak_freq_table(
+def get_peak_freq_feature(
     partitions: dict[str, pd.DataFrame], 
     movie_list: list[str],
     height: float,
@@ -386,7 +386,7 @@ def peak_freq_table(
         peak_freq_list = []
         for au in au_index :
             
-            peaks, times = find_AU_peaks(df, au, height, distance, prominence)
+            peaks, times = find_au_peaks(df, au, height, distance, prominence)
             num = len(peaks)
             if num == 0 :
                 f = 0
@@ -397,13 +397,13 @@ def peak_freq_table(
     return result
 
 # Node: 全特徴量のDataFrameを結合
-def integrate_features_table(
+def get_integrated_feature(
     *feature_tables: pd.DataFrame
     ) -> pd.DataFrame :
     return pd.concat(feature_tables, axis=1)
 
 # Node: 統合済み特徴量DataFrameにmetadataを結合
-def integrate_metadata(
+def get_features_table(
     integrated_feature: pd.DataFrame, 
     metadata: pd.DataFrame
     ) -> pd.DataFrame :

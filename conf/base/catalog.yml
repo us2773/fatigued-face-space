@@ -3,49 +3,49 @@
 # Documentation for this file format can be found in "The Data Catalog"
 # Link: https://docs.kedro.org/en/stable/catalog-data/introduction/#data-catalog
 
-openface_result:
+openface_timeseries:
   type: partitions.PartitionedDataset
   path: data/02_intermediate/openface_result
   filename_suffix: ".parquet"
   dataset:
     type: pandas.ParquetDataset
 
-cleansed_openface:
+cleansed_openface_timeseries:
   type: partitions.PartitionedDataset
   path: data/03_primary/openface_result
   filename_suffix: ".parquet"
   dataset:
     type: pandas.ParquetDataset
 
-trend_residual_table:
+trend_residual_timeseries:
   type: partitions.PartitionedDataset
   path: data/04_feature/trend_residual
   filename_suffix: ".parquet"
   dataset:
     type: pandas.ParquetDataset
 
-metadata_list: 
+movie_metadata:
   type: pandas.CSVDataset
   filepath: data/01_raw/metadata_csv/metadata_${globals:expt_name}.csv
 
-trend_mean_table:
+trend_mean_feature:
   type: pandas.ParquetDataset
   filepath: data/04_feature/trend_mean.parquet
   versioned: true
 
-trend_var_table:
+trend_var_feature:
   type: pandas.ParquetDataset
   filepath: data/04_feature/trend_var.parquet
   versioned: true
 
-peak_freq_series:
+peak_timeseries:
   type: partitions.PartitionedDataset
   path: data/04_feature/peak_freq_series
   filename_suffix: ".parquet"
   dataset:
     type: pandas.ParquetDataset
 
-peak_freq_table: 
+peak_freq_feature:
   type: pandas.ParquetDataset
   filepath: data/04_feature/peak_freq.parquet
   versioned: true

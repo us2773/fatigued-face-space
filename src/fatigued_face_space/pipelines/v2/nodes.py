@@ -6,7 +6,7 @@ from ..au_map import au_map_int
 
 
 # Node: 複数のOpenFace時系列からTrendとResidualを出力
-def sepalate_trend_residual(
+def get_trend_residual_timeseries(
     partitions: dict[str, pd.DataFrame],
     movie_list: list[str],
     frac: float,
@@ -40,7 +40,7 @@ def sepalate_trend_residual(
 
 
 # Node: トレンド平均を算出
-def trend_mean_table_sepalated(
+def get_trend_mean_feature(
     partitions: dict[str, pd.DataFrame], 
     movie_list: list[str], 
     ) -> pd.DataFrame :
@@ -61,7 +61,7 @@ def trend_mean_table_sepalated(
 
 
 # Node: トレンド分散を算出
-def trend_var_table_sepalated(
+def get_trend_var_feature(
     partitions: dict[str, pd.DataFrame], 
     movie_list: list[str], 
     ) -> pd.DataFrame :
@@ -81,8 +81,8 @@ def trend_var_table_sepalated(
     return result
 
 
-# Node: ピーク点出現頻度を算出
-def get_peak_freq(
+# Node: 残差のピーク点の時刻を取得
+def get_peak_timeseries(
     partitions: dict[str, pd.DataFrame], 
     movie_list: list[str],
     height: float,
@@ -103,14 +103,14 @@ def get_peak_freq(
             times = df["timestamp"].values
 
             peaks, _ = find_peaks(signal, height=height, distance=distance, prominence=prominence)
-            result_data[f"AU{au:02}_peakfreq"] = pd.Series(times[peaks], dtype="float64") # Seriesを結合する場合、データ長の不一致によるエラーは起きない
+            result_data[f"AU{au:02}_peakpoints"] = pd.Series(times[peaks], dtype="float64") # Seriesを結合する場合、データ長の不一致によるエラーは起きない
             
         dfs[name] = pd.DataFrame(result_data)
     return dfs
 
 
 
-def peak_freq_table_residual(
+def get_peak_freq_feature(
     peak_partitions: dict[str, pd.DataFrame], 
     tr_partitions: dict[str, pd.DataFrame], 
     movie_list: list[str], 
@@ -124,13 +124,13 @@ def peak_freq_table_residual(
         peak_df = peak_partitions[name]()
         trend_df = tr_partitions[name]()
         
-        # peakfreq_tableはピーク点のある時刻しか持ってない
-        # 全体の撮影時刻はtrend_residual_tableから取得
+        # peak_timeseriesはピーク点のある時刻しか持ってない
+        # 全体の撮影時刻はtrend_residual_timeseriesから取得
         end_time = trend_df["timestamp"].iloc[-1]
 
         values = []
         for au in au_map_int:
-            num = peak_df[f"AU{au:02}_peakfreq"].count()
+            num = peak_df[f"AU{au:02}_peakpoints"].count()
             values.append(0 if num == 0 else float(num / end_time))
 
         rows[name] = values

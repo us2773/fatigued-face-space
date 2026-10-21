@@ -8,7 +8,7 @@ from matplotlib.markers import MarkerStyle
 from fatigued_face_space.pipelines.au_map import au_map_int
 from fatigued_face_space.pipelines.plots.nodes import (
     create_peak_plots,
-    create_trend_noise_plots,
+    create_trend_residual_plots,
 )
 
 
@@ -22,7 +22,7 @@ def _sample_au_data() -> pd.DataFrame:
     return pd.DataFrame(columns)
 
 
-def test_trend_noise_plots_use_metadata_movie_and_expected_labels(tmp_path):
+def test_trend_residual_plots_use_metadata_movie_and_expected_labels(tmp_path):
     df = _sample_au_data()
     partitions = {"selected": lambda: df, "other": lambda: df}
     trend = np.linspace(0.0, 0.3, len(df))
@@ -38,7 +38,7 @@ def test_trend_noise_plots_use_metadata_movie_and_expected_labels(tmp_path):
         "other": lambda: trend_residual_df,
     }
 
-    plots = create_trend_noise_plots(
+    plots = create_trend_residual_plots(
         partitions, trend_residual_partitions, ["selected"]
     )
 
@@ -94,7 +94,7 @@ def test_peak_plots_mark_detected_samples():
         residual_columns[f"AU{au:02}_residual"] = (
             residual_signal.copy() if au != no_peak_au else np.zeros(40)
         )
-        peak_columns[f"AU{au:02}_peakfreq"] = pd.Series(
+        peak_columns[f"AU{au:02}_peakpoints"] = pd.Series(
             [0.5, 3.0] if au != no_peak_au else [], dtype="float64"
         )
     residual_df = pd.DataFrame(residual_columns)

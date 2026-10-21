@@ -1,4 +1,4 @@
-trend_noise_plots:
+trend_residual_plots:
   type: matplotlib.MatplotlibDataset
   filepath: data/06_plot/trend_noise
   versioned: true

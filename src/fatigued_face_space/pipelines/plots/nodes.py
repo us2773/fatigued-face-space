@@ -32,13 +32,13 @@ def _create_au_figure(
     return figure, axes
 
 
-def create_trend_noise_plots(
+def create_trend_residual_plots(
     partitions: Mapping[str, Callable[[], pd.DataFrame]],
     trend_residual_partitions: Mapping[str, Callable[[], pd.DataFrame]],
     movie_list: list[str],
 ) -> dict[str, Figure]:
     """Plot the raw AU signal, stored LOWESS trend, and residual for each movie."""
-    trend_noise_figures: dict[str, Figure] = {}
+    trend_residual_figures: dict[str, Figure] = {}
 
     for movie_name in movie_list:
         df = partitions[movie_name]()
@@ -64,9 +64,9 @@ def create_trend_noise_plots(
             )
             axes.axhline(0, color="#808080", linewidth=0.7, alpha=0.5)
             axes.legend()
-            trend_noise_figures[_plot_output_key(movie_name, au_number)] = figure
+            trend_residual_figures[_plot_output_key(movie_name, au_number)] = figure
 
-    return trend_noise_figures
+    return trend_residual_figures
 
 
 def create_peak_plots(
@@ -88,7 +88,7 @@ def create_peak_plots(
         for au_number in au_map_int:
             signal = df[f" AU{au_number:02}_r"].to_numpy()
             residual = trend_residual_df[f"AU{au_number:02}_residual"].to_numpy()
-            peak_times = peak_df[f"AU{au_number:02}_peakfreq"].dropna().to_numpy()
+            peak_times = peak_df[f"AU{au_number:02}_peakpoints"].dropna().to_numpy()
             peak_indices = time_index.get_indexer(peak_times)
             if (peak_indices < 0).any():
                 raise ValueError(
