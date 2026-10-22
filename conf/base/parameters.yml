@@ -1,3 +1,4 @@
+# execute_openface関連
 openface: 
   input_dir: data/01_raw/movie
   temporary_dir: data/02_intermediate/openface_temporary
@@ -8,20 +9,20 @@ openface:
   metadata_dir: data/02_intermediate/metadata_csv
   au_model: static
 
+# trend, residual分離関連
 trend:
   frac: 0.1
   it: 3
   delta: 0.0
   return_sorted: false
 
+# peak点検出関連
 peak:
   height: 0.1
   distance: 5
   prominence: 0.1
 
-
-au_model: statics
-
+# Docker関連
 # サンプル
 # ここはGit追跡対象のconf/baseです。ここには環境設定を記載せず、非追跡ディレクトリのparameter.ymlに自分の環境のものに変更してください。
 docker:

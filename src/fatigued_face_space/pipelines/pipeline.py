@@ -1,8 +1,19 @@
 from kedro.pipeline import Node, Pipeline
 
-from .nodes import *
+from .nodes import (
+    get_cleansed_openface_timeseries,
+    get_features_table,
+    get_incomplete_movies,
+    get_integrated_feature,
+    get_movie_list,
+    get_openface_from_csv_timeseries,
+    get_openface_from_video_timeseries,
+    get_peak_freq_feature,
+    get_trend_mean_feature,
+    get_trend_var_feature,
+)
 
-def feature_extraction(**kwargs) -> Pipeline:
+def execute_openface(**kwargs) -> Pipeline:
     return Pipeline(
         [
             Node(
@@ -12,7 +23,7 @@ def feature_extraction(**kwargs) -> Pipeline:
                 name="get_incomplete_movies",
             ),
             Node(
-                func=run_openface,
+                func=get_openface_from_video_timeseries,
                 inputs=[
                     "params:openface.input_dir",
                     "params:openface.temporary_dir",
@@ -23,8 +34,8 @@ def feature_extraction(**kwargs) -> Pipeline:
                     "params:docker.feature_extraction",
                     "params:au_model"
                     ],
-                outputs="openface_result",
-                name="run_openface",
+                outputs="openface_timeseries",
+                name="get_openface_from_video_timeseries",
             )
         ])
 
@@ -38,10 +49,10 @@ def import_external_csv(**kwargs) -> Pipeline :
                 name="get_incomplete_movies",
             ),
             Node(
-                func=import_openface_files,
+                func=get_openface_from_csv_timeseries,
                 inputs=["incomplete_movies", "params:openface.temporary_dir"],
-                outputs="openface_result",
-                name="import_openface_files"
+                outputs="openface_timeseries",
+                name="get_openface_from_csv_timeseries"
             )
         ]
     )
@@ -50,47 +61,47 @@ def create_features_report(**kwargs) -> Pipeline :
     return Pipeline(
         [
             Node(
-                func=cleansing_dataframe,
-                inputs=["openface_result"],
-                outputs="cleansed_openface",
-                name="cleansing_dataframe"
+                func=get_cleansed_openface_timeseries,
+                inputs=["openface_timeseries"],
+                outputs="cleansed_openface_timeseries",
+                name="get_cleansed_openface_timeseries"
             ),
             Node(
                 func=get_movie_list,
-                inputs="metadata_list",
+                inputs="movie_metadata",
                 outputs="movie_list",
                 name="get_movie_list"
             ),
             Node(
-                func=trend_mean_table,
-                inputs=["cleansed_openface", "movie_list", "params:trend.frac", "params:trend.it", "params:trend.delta", "params:trend.return_sorted"],
-                outputs="trend_mean_table",
-                name="trend_mean_table"
+                func=get_trend_mean_feature,
+                inputs=["cleansed_openface_timeseries", "movie_list", "params:trend.frac", "params:trend.it", "params:trend.delta", "params:trend.return_sorted"],
+                outputs="trend_mean_feature",
+                name="get_trend_mean_feature"
                 ),
             Node(
-                func=trend_var_table,
-                inputs=["cleansed_openface", "movie_list", "params:trend.frac", "params:trend.it", "params:trend.delta", "params:trend.return_sorted"],
-                outputs="trend_var_table",
-                name="trend_var_table"
+                func=get_trend_var_feature,
+                inputs=["cleansed_openface_timeseries", "movie_list", "params:trend.frac", "params:trend.it", "params:trend.delta", "params:trend.return_sorted"],
+                outputs="trend_var_feature",
+                name="get_trend_var_feature"
                 ),
             Node(
-                func=peak_freq_table,
-                inputs=["cleansed_openface", "movie_list", "params:peak.height", "params:peak.distance", "params:peak.prominence"],
-                outputs="peak_freq_table",
-                name="peak_freq_table"
+                func=get_peak_freq_feature,
+                inputs=["cleansed_openface_timeseries", "movie_list", "params:peak.height", "params:peak.distance", "params:peak.prominence"],
+                outputs="peak_freq_feature",
+                name="get_peak_freq_feature"
                 ),
             
             Node(
-                func=integrate_features_table,
-                inputs=["trend_mean_table","trend_var_table", "peak_freq_table"],
+                func=get_integrated_feature,
+                inputs=["trend_mean_feature","trend_var_feature", "peak_freq_feature"],
                 outputs="integrated_feature",
-                name="integrate_features_table"
+                name="get_integrated_feature"
             ),
             Node(
-                func=integrate_metadata,
-                inputs=["integrated_feature", "metadata_list"],
+                func=get_features_table,
+                inputs=["integrated_feature", "movie_metadata"],
                 outputs="features_table",
-                name="integrate_metadata"
+                name="get_features_table"
             )
         ]
     )
