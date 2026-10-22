@@ -13,7 +13,7 @@ from .nodes import (
     get_trend_var_feature,
 )
 
-def feature_extraction(**kwargs) -> Pipeline:
+def execute_openface(**kwargs) -> Pipeline:
     return Pipeline(
         [
             Node(

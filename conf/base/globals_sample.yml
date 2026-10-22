@@ -1,5 +1,4 @@
 # ここはGit追跡対象のconf/baseです。ここには環境設定を記載せず、実験ごとに作成するディレクトリに新たにglobals.ymlを作成し、
-# 実験名を記載して下さい。
-# 実験名は、実験ごとにconfに作成するディレクトリの名前と同じにしてください。
+# 使用するmetadataファイル名を記載して下さい。
 
-expt_name: expt_name
+metadata_file: metadata_file

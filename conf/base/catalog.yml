@@ -26,7 +26,7 @@ trend_residual_timeseries:
 
 movie_metadata:
   type: pandas.CSVDataset
-  filepath: data/01_raw/metadata_csv/metadata_${globals:expt_name}.csv
+  filepath: data/01_raw/metadata_csv/metadata_${globals:metadata_file}.csv
 
 trend_mean_feature:
   type: pandas.ParquetDataset
