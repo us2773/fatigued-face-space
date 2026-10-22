@@ -7,9 +7,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
+import yaml
 from kedro.framework.project import pipelines, settings
 from kedro.framework.session import KedroSession
 from kedro.pipeline import Pipeline
+from yaml.nodes import MappingNode, Node, ScalarNode
 
 
 @dataclass(frozen=True)
@@ -24,6 +26,15 @@ class ExperimentRequirements:
 class CheckResult:
     status: Literal["OK", "ERROR", "SKIP"]
     message: str
+
+
+@dataclass(frozen=True)
+class ParameterDefinition:
+    path: Path
+    node: Node
+
+    def location(self, project_path: Path) -> str:
+        return f"{self.path.relative_to(project_path)}:{self.node.start_mark.line + 1}"
 
 
 def requirements_for_pipeline(pipeline: Pipeline) -> ExperimentRequirements:
@@ -43,9 +54,87 @@ def _parameter_state(parameters: Mapping, name: str) -> str:
         if not isinstance(value, Mapping) or part not in value:
             return "missing"
         value = value[part]
-    if value is None or (isinstance(value, str) and not value.strip()):
-        return "unset"
+    if value is None:
+        return "null"
+    if isinstance(value, str) and not value.strip():
+        return "blank"
     return "present"
+
+
+def _parameter_files(config_loader: Any, directory: Path) -> list[Path]:
+    patterns = config_loader.config_patterns["parameters"]
+    ignore_hidden = config_loader.ignore_hidden
+    files = {
+        path
+        for pattern in patterns
+        for path in directory.glob(pattern)
+        if path.is_file()
+        and path.suffix in {".yml", ".yaml", ".json"}
+        and (
+            not ignore_hidden
+            or not any(
+                part.startswith(".") for part in path.relative_to(directory).parts
+            )
+        )
+    }
+    return sorted(files)
+
+
+def _parameter_documents(
+    config_loader: Any, directory: Path
+) -> list[tuple[Path, Node]]:
+    documents = []
+    for path in _parameter_files(config_loader, directory):
+        node = yaml.compose(path.read_text(encoding="utf-8"), Loader=yaml.SafeLoader)
+        if node is not None:
+            documents.append((path, node))
+    return documents
+
+
+def _node_at_path(node: Node, parts: tuple[str, ...]) -> Node | None:
+    for part in parts:
+        if not isinstance(node, MappingNode):
+            return None
+        values = [
+            value
+            for key, value in node.value
+            if isinstance(key, ScalarNode) and key.value == part
+        ]
+        if not values:
+            return None
+        node = values[-1]
+    return node
+
+
+def _parameter_definition(
+    name: str,
+    base_documents: list[tuple[Path, Node]],
+    env_documents: list[tuple[Path, Node]],
+    merge_strategy: str,
+) -> ParameterDefinition | None:
+    """Locate the winning definition under Kedro's base/environment merge."""
+    parts = tuple(name.split("."))
+    if merge_strategy == "destructive" and any(
+        _node_at_path(node, parts[:1]) is not None for _, node in env_documents
+    ):
+        documents = env_documents
+    else:
+        documents = [*env_documents, *base_documents]
+    for path, node in documents:
+        parameter_node = _node_at_path(node, parts)
+        if parameter_node is not None:
+            return ParameterDefinition(path, parameter_node)
+    return None
+
+
+def _is_bare_empty(node: Node) -> bool:
+    """Separate ``key:`` from explicit ``key: null`` before YAML loses that detail."""
+    return (
+        isinstance(node, ScalarNode)
+        and node.tag == "tag:yaml.org,2002:null"
+        and node.value == ""
+        and node.style is None
+    )
 
 
 def _safe_error_name(error: Exception) -> str:
@@ -68,45 +157,82 @@ def _load_config(
         return None
 
 
-def _check_experiment_name(
+def _check_metadata_selection(
     globals_config: Mapping | None,
     globals_file: Path,
     env: str,
     results: list[CheckResult],
-) -> None:
+) -> str | None:
     if not globals_file.is_file():
         display_file = Path(settings.CONF_SOURCE) / env / "globals.yml"
         results.append(
             CheckResult("ERROR", f"Experiment settings missing: {display_file}")
         )
     if globals_config is None:
-        results.append(CheckResult("SKIP", "Experiment name: globals unavailable"))
+        results.append(CheckResult("SKIP", "Metadata selection: globals unavailable"))
     elif not globals_file.is_file():
-        results.append(CheckResult("SKIP", "Experiment name: globals.yml missing"))
-    elif globals_config.get("expt_name") != env:
-        results.append(
-            CheckResult("ERROR", f"Experiment name: expt_name must equal {env}")
-        )
+        results.append(CheckResult("SKIP", "Metadata selection: globals.yml missing"))
     else:
-        results.append(CheckResult("OK", f"Experiment name: expt_name matches {env}"))
+        metadata_file = globals_config.get("metadata_file")
+        if not isinstance(metadata_file, str) or not metadata_file.strip():
+            results.append(
+                CheckResult("ERROR", "Metadata selection: metadata_file is unset")
+            )
+        else:
+            results.append(
+                CheckResult("OK", f"Metadata selection: metadata_file={metadata_file}")
+            )
+            return metadata_file
+    return None
 
 
 def _check_parameters(
     parameters: Mapping | None,
     requirements: ExperimentRequirements,
+    config_loader: Any,
+    env: str,
     results: list[CheckResult],
 ) -> None:
     if parameters is None:
         results.append(CheckResult("SKIP", "Parameters: configuration unavailable"))
         return
 
-    missing = [
-        (name, _parameter_state(parameters, name)) for name in requirements.parameters
-    ]
-    missing = [(name, state) for name, state in missing if state != "present"]
-    for name, state in missing:
-        results.append(CheckResult("ERROR", f"Parameter {state}: params:{name}"))
-    if not missing:
+    conf_source = Path(config_loader.conf_source)
+    base_env = config_loader.base_env
+    base_documents = _parameter_documents(config_loader, conf_source / base_env)
+    env_documents = (
+        _parameter_documents(config_loader, conf_source / env)
+        if env != base_env
+        else []
+    )
+    merge_strategy = config_loader.merge_strategy.get(
+        "parameters", "destructive"
+    ).lower()
+
+    errors = 0
+    for name in requirements.parameters:
+        state = _parameter_state(parameters, name)
+        if state == "missing":
+            results.append(CheckResult("ERROR", f"Parameter missing: params:{name}"))
+            errors += 1
+            continue
+        if state in {"null", "blank"}:
+            definition = _parameter_definition(
+                name, base_documents, env_documents, merge_strategy
+            )
+            if state == "blank" or (
+                definition is not None and _is_bare_empty(definition.node)
+            ):
+                location = (
+                    f" ({definition.location(conf_source.parent)})"
+                    if definition
+                    else ""
+                )
+                results.append(
+                    CheckResult("ERROR", f"Parameter blank: params:{name}{location}")
+                )
+                errors += 1
+    if not errors:
         results.append(
             CheckResult(
                 "OK", f"Parameters: {len(requirements.parameters)} required keys found"
@@ -118,7 +244,7 @@ def _check_metadata(
     catalog_config: Mapping | None,
     catalog: Any | None,
     requirements: ExperimentRequirements,
-    env: str,
+    metadata_file: str | None,
     results: list[CheckResult],
 ) -> None:
     if not requirements.metadata:
@@ -128,6 +254,9 @@ def _check_metadata(
         return
     if catalog_config is None or catalog is None:
         results.append(CheckResult("SKIP", "Metadata: catalog unavailable"))
+        return
+    if metadata_file is None:
+        results.append(CheckResult("SKIP", "Metadata: metadata_file unavailable"))
         return
 
     metadata_config = catalog_config.get("movie_metadata")
@@ -140,10 +269,11 @@ def _check_metadata(
         results.append(
             CheckResult("ERROR", "Metadata: movie_metadata filepath missing")
         )
-    elif Path(filepath).name != f"metadata_{env}.csv":
+    elif Path(filepath).name != f"metadata_{metadata_file}.csv":
         results.append(
             CheckResult(
-                "ERROR", f"Metadata path: expected metadata_{env}.csv, got {filepath}"
+                "ERROR",
+                f"Metadata path: expected metadata_{metadata_file}.csv, got {filepath}",
             )
         )
     else:
@@ -188,9 +318,11 @@ def _check_context(
     ):
         results.append(CheckResult("OK", f"Configuration: base + {env} loaded"))
 
-    _check_experiment_name(globals_config, globals_file, env, results)
-    _check_parameters(parameters, requirements, results)
-    _check_metadata(catalog_config, catalog, requirements, env, results)
+    metadata_file = _check_metadata_selection(
+        globals_config, globals_file, env, results
+    )
+    _check_parameters(parameters, requirements, context.config_loader, env, results)
+    _check_metadata(catalog_config, catalog, requirements, metadata_file, results)
 
 
 def check_experiment(
