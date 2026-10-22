@@ -35,6 +35,25 @@ You can run your Kedro project with:
 kedro run
 ```
 
+## Check an experiment before running it
+
+Run the read-only preflight check from the project root:
+
+```console
+kedro expt check --env=us_2601_v2 --pipeline=v2
+```
+
+The command checks that the experiment configuration directory exists, that
+`globals.yml` contains an `expt_name` matching `--env`, and that the effective
+configuration from `conf/base` and `conf/<env>` provides every `params:` input
+used by the selected pipeline. For pipelines that use `movie_metadata`, it also
+checks that the catalog points to `metadata_<env>.csv` and that the file exists.
+The `feature_extraction` and `external_csv` pipelines do not require metadata.
+
+The check reports all missing requirements it can identify, returns exit code
+`0` on success and `1` on failure, and does not execute pipeline nodes. It does
+not inspect metadata contents, source data, or Docker availability.
+
 ## How to test your Kedro project
 
 Have a look at the file `tests/test_run.py` for instructions on how to write your tests. You can run your tests as follows:
