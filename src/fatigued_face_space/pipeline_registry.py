@@ -12,6 +12,7 @@ from fatigued_face_space.pipelines.pipeline import (
 from fatigued_face_space.pipelines.plots.pipeline import create_au_plots
 from fatigued_face_space.pipelines.v2.pipeline import create_features_report_v2
 from fatigued_face_space.pipelines.v3.pipeline import create_features_report_v3
+from fatigued_face_space.pipelines.v4.pipeline import create_features_report_v4
 
 
 def register_pipelines() -> dict[str, Pipeline]:
@@ -27,5 +28,6 @@ def register_pipelines() -> dict[str, Pipeline]:
         "external_csv": import_external_csv(),
         "au_plots": create_au_plots(),
         "v2" : create_features_report_v2(),
-        "v3": create_features_report_v3()
+        "v3": create_features_report_v3(),
+        "v4": create_features_report_v4()
     }
