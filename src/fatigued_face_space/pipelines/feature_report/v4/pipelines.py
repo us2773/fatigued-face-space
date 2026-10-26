@@ -1,6 +1,6 @@
 from kedro.pipeline import Node, Pipeline
 
-from fatigued_face_space.nodes.cleansing.v1.nodes import get_cleansed_openface_timeseries
+
 from fatigued_face_space.nodes.features.v1.nodes import get_features_table, get_integrated_feature
 from fatigued_face_space.nodes.metadata.v1.nodes import get_movie_list
 from fatigued_face_space.nodes.peak.v4.nodes import get_peak_timeseries_madnormalize
@@ -15,12 +15,6 @@ from fatigued_face_space.nodes.trend.v2.nodes import (
 def create_features_report_v4(**kwargs) -> Pipeline :
     return Pipeline(
         [
-            Node(
-                func=get_cleansed_openface_timeseries,
-                inputs=["openface_timeseries"],
-                outputs="cleansed_openface_timeseries",
-                name="get_cleansed_openface_timeseries"
-            ),
             Node(
                 func=get_movie_list,
                 inputs="movie_metadata",

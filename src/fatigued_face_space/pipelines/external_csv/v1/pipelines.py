@@ -5,6 +5,7 @@ from fatigued_face_space.nodes.openface.v1.nodes import (
     get_openface_from_csv_timeseries,
 )
 
+from fatigued_face_space.nodes.cleansing.v1.nodes import get_cleansed_openface_timeseries
 
 def import_external_csv(**kwargs) -> Pipeline :
     return Pipeline(
@@ -20,6 +21,12 @@ def import_external_csv(**kwargs) -> Pipeline :
                 inputs=["incomplete_movies", "params:openface.temporary_dir"],
                 outputs="openface_timeseries",
                 name="get_openface_from_csv_timeseries"
-            )
+            ),
+            Node(
+                func=get_cleansed_openface_timeseries,
+                inputs=["openface_timeseries"],
+                outputs="cleansed_openface_timeseries",
+                name="get_cleansed_openface_timeseries"
+            ),
         ]
     )

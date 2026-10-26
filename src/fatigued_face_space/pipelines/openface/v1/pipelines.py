@@ -5,6 +5,8 @@ from fatigued_face_space.nodes.openface.v1.nodes import (
     get_openface_from_video_timeseries,
 )
 
+from fatigued_face_space.nodes.cleansing.v1.nodes import get_cleansed_openface_timeseries
+
 
 def execute_openface(**kwargs) -> Pipeline:
     return Pipeline(
@@ -29,5 +31,11 @@ def execute_openface(**kwargs) -> Pipeline:
                     ],
                 outputs="openface_timeseries",
                 name="get_openface_from_video_timeseries",
-            )
+            ),
+            Node(
+                func=get_cleansed_openface_timeseries,
+                inputs=["openface_timeseries"],
+                outputs="cleansed_openface_timeseries",
+                name="get_cleansed_openface_timeseries"
+            ),
         ])
