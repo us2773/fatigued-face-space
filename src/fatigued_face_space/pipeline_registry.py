@@ -4,15 +4,13 @@ from __future__ import annotations
 
 from kedro.pipeline import Pipeline
 
-from fatigued_face_space.pipelines.pipeline import (
-    create_features_report,
-    execute_openface,
-    import_external_csv,
-)
-from fatigued_face_space.pipelines.plots.pipeline import create_au_plots
-from fatigued_face_space.pipelines.v2.pipeline import create_features_report_v2
-from fatigued_face_space.pipelines.v3.pipeline import create_features_report_v3
-from fatigued_face_space.pipelines.v4.pipeline import create_features_report_v4
+from fatigued_face_space.pipelines.external_csv.v1.pipelines import import_external_csv
+from fatigued_face_space.pipelines.feature_report.v1.pipelines import create_features_report
+from fatigued_face_space.pipelines.feature_report.v2.pipelines import create_features_report_v2
+from fatigued_face_space.pipelines.feature_report.v3.pipelines import create_features_report_v3
+from fatigued_face_space.pipelines.feature_report.v4.pipelines import create_features_report_v4
+from fatigued_face_space.pipelines.openface.v1.pipelines import execute_openface
+from fatigued_face_space.pipelines.plots.v1.pipelines import create_au_plots
 
 
 def register_pipelines() -> dict[str, Pipeline]:
