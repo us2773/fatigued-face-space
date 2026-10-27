@@ -62,3 +62,46 @@ features_table:
   save_args:
     index: true
     lineterminator: "\n" #csv化の際に行間に空白行が生じるのを防止
+
+languid_features_table:
+  type: pandas.ParquetDataset
+  filepath: data/06_fatigue_group/languid_features_table.parquet
+  versioned: true
+  save_args:
+    index: false
+
+tense_features_table:
+  type: pandas.ParquetDataset
+  filepath: data/06_fatigue_group/tense_features_table.parquet
+  versioned: true
+  save_args:
+    index: false
+
+base_features_table:
+  type: pandas.ParquetDataset
+  filepath: data/06_fatigue_group/base_features_table.parquet
+  versioned: true
+  save_args:
+    index: false
+
+languid_compared_features_table:
+  type: pandas.ParquetDataset
+  filepath: data/07_compared_table/languid_compared_features_table.parquet
+  versioned: true
+  save_args:
+    index: false
+
+tense_compared_features_table:
+  type: pandas.ParquetDataset
+  filepath: data/07_compared_table/tense_compared_features_table.parquet
+  versioned: true
+  save_args:
+    index: false
+
+fatigue_direction_matches:
+  type: pandas.CSVDataset
+  filepath: data/08_fatigue_direction_matches/fatigue_direction_matches.csv
+  versioned: true
+  save_args:
+    index: true
+    lineterminator: "\n"
