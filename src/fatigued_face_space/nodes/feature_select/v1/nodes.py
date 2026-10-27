@@ -1,11 +1,26 @@
+from math import isfinite
+from numbers import Real
+
 import pandas as pd
 
 from fatigued_face_space.common.directions_map import dir_match, directions
 
+def _validate_min_median_difference(min_median_difference: float) -> None:
+    if (
+        isinstance(min_median_difference, bool)
+        or not isinstance(min_median_difference, Real)
+        or not isfinite(min_median_difference)
+        or min_median_difference < 0
+    ):
+        raise ValueError("min_median_difference must be a finite nonnegative number")
 
-def judge_direction(base_median, group_median):
+
+def judge_direction(base_median, group_median, min_median_difference: float = 0.0):
+    _validate_min_median_difference(min_median_difference)
     if pd.isna(base_median) or pd.isna(group_median):
         return directions.missing
+    if abs(group_median - base_median) < min_median_difference:
+        return directions.unchanged
     if group_median > base_median:
         return directions.up
     if group_median < base_median:
@@ -88,7 +103,9 @@ def get_fatigue_features_tables(
 def compare_fatigue_group_medians(
     base_df: pd.DataFrame,
     fatigue_df: pd.DataFrame,
+    min_median_difference: float = 0.0,
 ) -> pd.DataFrame:
+    _validate_min_median_difference(min_median_difference)
     base = base_df.set_index("person")
     fatigue = fatigue_df.set_index("person")
     if not base.index.is_unique or not fatigue.index.is_unique:
@@ -109,10 +126,12 @@ def compare_fatigue_group_medians(
     )
 
     valid = base.notna() & fatigue.notna()
+    difference = fatigue - base
+    sufficient = difference.abs().ge(min_median_difference)
 
-    compared = compared.mask(valid & fatigue.eq(base), directions.unchanged)
-    compared = compared.mask(valid & fatigue.gt(base), directions.up)
-    compared = compared.mask(valid & fatigue.lt(base), directions.down)
+    compared = compared.mask(valid, directions.unchanged)
+    compared = compared.mask(valid & sufficient & difference.gt(0), directions.up)
+    compared = compared.mask(valid & sufficient & difference.lt(0), directions.down)
 
     return compared.reset_index()
 

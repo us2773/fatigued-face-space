@@ -9,6 +9,7 @@ from kedro.runner import SequentialRunner
 from fatigued_face_space.nodes.feature_select.v1.nodes import (
     compare_fatigue_group_medians,
     get_fatigue_features_tables,
+    judge_direction,
     summarize_direction_matches,
 )
 from fatigued_face_space.pipelines.feature_select.v1.pipelines import (
@@ -59,9 +60,11 @@ def test_absent_group_retains_subject():
 
 
 @pytest.mark.parametrize("persist", [False, True])
-def test_pipeline_with_synthetic_data(tmp_path, persist):
+@pytest.mark.parametrize("threshold", [0.0, 1.5])
+def test_pipeline_with_synthetic_data(tmp_path, persist, threshold):
     """Exercise every node using artificial observations only."""
     parameters = {
+        "min_median_difference": threshold,
         "persons": [1, 2],
         "languid_classes": [1, 2],
         "tense_classes": [3, 4],
@@ -122,6 +125,8 @@ def test_pipeline_with_synthetic_data(tmp_path, persist):
         index=["languid", "tense"],
         dtype="object",
     )
+    if threshold > 0:
+        expected.loc[:, :] = "unchanged-match"
     pd.testing.assert_frame_equal(actual, expected, check_dtype=not persist)
     if persist:
         for name, entry in output_config.items():
@@ -133,3 +138,43 @@ def test_pipeline_with_synthetic_data(tmp_path, persist):
                 pd.testing.assert_frame_equal(
                     pd.read_parquet(files[0]), catalog.load(name)
                 )
+
+
+@pytest.mark.parametrize("threshold", [0.0, 0.5])
+def test_threshold_boundaries_and_missing(threshold):
+    base = pd.DataFrame({"person": range(8), "feature": [0.0] * 7 + [None]})
+    fatigue = pd.DataFrame(
+        {
+            "person": range(8),
+            "feature": [0.0, 0.25, -0.25, 0.5, -0.5, 1.0, None, 1.0],
+        }
+    )
+    expected = (
+        ["unchanged", "up", "down", "up", "down", "up", "missing", "missing"]
+        if threshold == 0
+        else [
+            "unchanged",
+            "unchanged",
+            "unchanged",
+            "up",
+            "down",
+            "up",
+            "missing",
+            "missing",
+        ]
+    )
+    actual = compare_fatigue_group_medians(base, fatigue, threshold)
+    assert actual["feature"].tolist() == expected
+    assert [
+        judge_direction(b, f, threshold)
+        for b, f in zip(base["feature"], fatigue["feature"], strict=True)
+    ] == expected
+
+
+@pytest.mark.parametrize("threshold", [-0.1, float("nan"), float("inf"), "0.1", True])
+def test_invalid_threshold_is_rejected(threshold):
+    table = pd.DataFrame({"person": [1], "feature": [0.0]})
+    with pytest.raises(ValueError, match="finite nonnegative"):
+        compare_fatigue_group_medians(table, table, threshold)
+    with pytest.raises(ValueError, match="finite nonnegative"):
+        judge_direction(0.0, 0.0, threshold)
