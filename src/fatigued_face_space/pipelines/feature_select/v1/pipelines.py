@@ -4,7 +4,6 @@ from fatigued_face_space.nodes.feature_select.v1.nodes import (
     compare_fatigue_group_medians,
     get_fatigue_features_tables,
     summarize_fatigue_direction_matches,
-    get_selected_features_list
 )
 
 
