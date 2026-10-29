@@ -63,6 +63,11 @@ features_table:
     index: true
     lineterminator: "\n" #csv化の際に行間に空白行が生じるのを防止
 
+filtered_features_table:
+  type: pandas.ParquetDataset
+  filepath: data/06_fatigue_group/filtered_features_table.parquet
+  versioned: true
+
 languid_features_table:
   type: pandas.ParquetDataset
   filepath: data/06_fatigue_group/languid_features_table.parquet

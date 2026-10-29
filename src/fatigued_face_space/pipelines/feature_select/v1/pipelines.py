@@ -7,9 +7,12 @@ from fatigued_face_space.nodes.feature_select.v1.nodes import (
 )
 
 
+# 被験者間での変化方向を集計するPipelineを構築
 def create_feature_select(**kwargs) -> Pipeline:
+    """Build a pipeline that compares medians and summarizes direction agreement."""
     return Pipeline(
         [
+            # 被験者ごとの中央値を疲労群と基準表情に分けて集計
             Node(
                 func=get_fatigue_features_tables,
                 inputs=[
@@ -25,6 +28,7 @@ def create_feature_select(**kwargs) -> Pipeline:
                 ],
                 name="get_fatigue_features_tables",
             ),
+            # 各疲労群を基準表情と比較
             *[
                 Node(
                     func=compare_fatigue_group_medians,
@@ -38,6 +42,7 @@ def create_feature_select(**kwargs) -> Pipeline:
                 )
                 for group in ("languid", "tense")
             ],
+            # 被験者間の変化方向の一致を集計
             Node(
                 func=summarize_fatigue_direction_matches,
                 inputs=[

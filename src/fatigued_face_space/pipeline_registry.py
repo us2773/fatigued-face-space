@@ -11,6 +11,7 @@ from fatigued_face_space.pipelines.feature_report.v3.pipelines import create_fea
 from fatigued_face_space.pipelines.feature_report.v4.pipelines import create_features_report_v4
 from fatigued_face_space.pipelines.openface.v1.pipelines import execute_openface
 from fatigued_face_space.pipelines.feature_select.v1.pipelines import create_feature_select
+from fatigued_face_space.pipelines.feature_select.v2.pipelines import create_feature_select_v2
 from fatigued_face_space.pipelines.plots.v1.pipelines import create_au_plots
 
 
@@ -30,5 +31,7 @@ def register_pipelines() -> dict[str, Pipeline]:
         "ext_v3": create_features_report_v3(),
         "ext_v4": create_features_report_v4(),
         "feature_select": create_feature_select(),
-        "ext_select": create_features_report_v4() + create_feature_select()
+        "ext_select": create_features_report_v4() + create_feature_select(),
+        "feature_select_v2": create_feature_select_v2(),
+        "ext_select_v2": create_features_report_v4() + create_feature_select_v2(),
     }

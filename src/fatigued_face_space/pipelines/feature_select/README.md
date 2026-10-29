@@ -1,5 +1,21 @@
 # feature_select
 
+`feature_select` (v1) retains all observations. `feature_select_v2` retains
+baseline rows (`is_baseface == 1`) and observations whose `fatigue_level` is in
+`feature_select.selected_fatigue_levels` AND whose `class` is in
+`feature_select.selected_classes`, then runs the same aggregation and
+comparison logic. Baseline rows are always retained, including those with
+missing fatigue levels or classes. Other rows with missing or unselected fatigue
+levels or classes are omitted. Either selection list being empty retains baseline
+rows only. The filter node function is named `filtered_features_table`. Configured subjects
+remain in median tables even if no fatigue observations remain, yielding
+`missing` comparisons.
+The filtered input is saved as a versioned Parquet dataset,
+`filtered_features_table`, under `data/06_fatigue_group`.
+
+`ext_select_v2` combines feature extraction v4 with feature selection v2.
+Output dataset names are shared with v1; each run saves a new version.
+
 The pipeline aggregates per-subject medians from `features_table`, compares
 fatigue groups with the baseline, and summarizes direction agreement.
 
