@@ -13,6 +13,7 @@ def find_au_peaks(
     prominence: float
     ) -> tuple[list, list]:
     
+    """Find peak positions and timestamps in an AU signal."""
     au_col = df.columns.get_loc(" AU01_r") + plot_num
     signal = df.iloc[:, au_col].values
     times = df[" timestamp"].values
@@ -29,6 +30,7 @@ def get_peak_freq_feature(
     distance: float, 
     prominence: float
     ) -> pd.DataFrame :
+    """Calculate peak-based AU features for each movie."""
     column_peakfreq = [f"AU{x:02}_peakfreq" for x in au_map_int]
     result = pd.DataFrame(columns=column_peakfreq)
     

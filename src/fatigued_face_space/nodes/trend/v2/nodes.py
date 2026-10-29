@@ -14,6 +14,7 @@ def get_trend_residual_timeseries(
     return_sorted: bool
 ) -> dict[str, pd.DataFrame]:
 
+    """Split AU signals into trends and residuals for each movie."""
     dfs: dict = {}
     
     for name in movie_list :
@@ -44,6 +45,7 @@ def get_trend_mean_feature(
     movie_list: list[str], 
     ) -> pd.DataFrame :
     
+    """Calculate the mean AU trend for each movie."""
     column_mean = [f"AU{x:02}_trend_mean" for x in au_map_int]
     result = pd.DataFrame(columns=column_mean)
     
@@ -65,6 +67,7 @@ def get_trend_var_feature(
     movie_list: list[str], 
     ) -> pd.DataFrame :
     
+    """Calculate the AU trend variance for each movie."""
     column_var = [f"AU{x:02}_trend_var" for x in au_map_int]
     result = pd.DataFrame(columns=column_var)
     

@@ -4,10 +4,12 @@ import pandas as pd
 
 
 # CSVをクレンジングしDataFrameを取得
+# Node: OpenFaceの時系列を整形して動画名を付与
 def get_cleansed_openface_timeseries(
     partitions: dict[str, pd.DataFrame]
 ) -> dict[str, pd.DataFrame]:
 
+    """Filter OpenFace rows and add the movie name."""
     dfs = {}
 
     for name, loader in partitions.items():

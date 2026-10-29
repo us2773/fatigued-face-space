@@ -13,6 +13,7 @@ def get_peak_timeseries(
     prominence: float
     ) -> dict[str, pd.DataFrame] :
     
+    """Find peak timestamps in residual signals."""
     dfs: dict = {}
     
     for name in movie_list :
@@ -32,12 +33,14 @@ def get_peak_timeseries(
     return dfs
 
 
+# Node: 動画ごとにAUのピークに基づく特徴量を算出
 def get_peak_freq_feature(
     peak_partitions: dict[str, pd.DataFrame], 
     tr_partitions: dict[str, pd.DataFrame], 
     movie_list: list[str], 
     ) :
     
+    """Calculate peak-based AU features for each movie."""
     column_peakfreq = [f"AU{x:02}_peakfreq" for x in au_map_int]
     
     rows = {}

@@ -7,7 +7,9 @@ from fatigued_face_space.nodes.openface.v1.nodes import (
 
 from fatigued_face_space.nodes.cleansing.v1.nodes import get_cleansed_openface_timeseries
 
+# 外部CSVから時系列を取得するPipelineを構築
 def import_external_csv(**kwargs) -> Pipeline :
+    """Build a pipeline that imports OpenFace CSV files."""
     return Pipeline(
         [
             Node(

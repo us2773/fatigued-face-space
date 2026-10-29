@@ -8,7 +8,9 @@ from fatigued_face_space.nodes.openface.v1.nodes import (
 from fatigued_face_space.nodes.cleansing.v1.nodes import get_cleansed_openface_timeseries
 
 
+# 動画からOpenFaceの結果を取得するPipelineを構築
 def execute_openface(**kwargs) -> Pipeline:
+    """Build a pipeline that runs OpenFace on videos."""
     return Pipeline(
         [
             Node(

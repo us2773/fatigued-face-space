@@ -15,6 +15,7 @@ def separate_au_trend_residual(
     return_sorted: bool
     ) -> tuple[np.ndarray, np.ndarray] :
     
+    """Split an AU signal into its LOWESS trend and residual."""
     AUR_start = df.columns.get_loc(" AU01_r")
     AUR_row = df.iloc[:, AUR_start + plot_num]
         
@@ -35,6 +36,7 @@ def get_trend_mean_feature(
     return_sorted: bool
     ) -> pd.DataFrame :
     
+    """Calculate the mean AU trend for each movie."""
     column_mean = [f"AU{x:02}_trend_mean" for x in au_map_int]
     result = pd.DataFrame(columns=column_mean)
     
@@ -62,6 +64,7 @@ def get_trend_var_feature(
     return_sorted: bool
     )  -> pd.DataFrame :
     
+    """Calculate the AU trend variance for each movie."""
     column_var = [f"AU{x:02}_trend_var" for x in au_map_int]
     result = pd.DataFrame(columns=column_var)
     

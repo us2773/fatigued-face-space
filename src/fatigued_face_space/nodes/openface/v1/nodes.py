@@ -19,6 +19,7 @@ def get_incomplete_movies(
     ) -> list[str]:
     
     # 01_raw/movie の中身をリスト化
+    """List movies that do not have OpenFace results yet."""
     all_movie = get_filenames_by_extension(inputdir, input_ext)
     print("01_raw/movie")
     for path in all_movie:        
@@ -42,11 +43,13 @@ def get_incomplete_movies(
 
 
 # 一時ディレクトリを読み出してpd.DataFrameを返すことでフレームワークが出力を認識
+# Node: OpenFaceのCSVを読み込み一時ファイルを削除
 def get_openface_from_csv_timeseries(
     incomplete_movies: list[str],
     output_dir: str
     ) -> dict[str, pd.DataFrame] :
     # 出力CSVの存在確認
+    """Read OpenFace CSV files and remove temporary files."""
     missing_csv = []
     for movie_name in incomplete_movies:
         csv_path = output_dir + "/" + movie_name + ".csv"
@@ -85,6 +88,7 @@ def get_openface_from_video_timeseries(
     au_model: str,
 ) -> dict[str, pd.DataFrame]:
     # 未処理動画がない場合の終了
+    """Run OpenFace on videos and read the resulting time series."""
     if not incomplete_movies:
         print("No incomplete movies.")
         return {}

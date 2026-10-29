@@ -18,6 +18,7 @@ def get_peak_timeseries_madnormalize(
     
     ) -> dict[str, pd.DataFrame] :
     
+    """Find residual peaks using thresholds based on signal variation."""
     dfs: dict = {}
     
     for name in movie_list :

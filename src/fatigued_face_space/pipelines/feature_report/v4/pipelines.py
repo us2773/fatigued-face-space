@@ -12,7 +12,9 @@ from fatigued_face_space.nodes.trend.v2.nodes import (
 )
 
 
+# 特徴量を抽出して統合するv4のPipelineを構築
 def create_features_report_v4(**kwargs) -> Pipeline :
+    """Build version 4 of the feature extraction pipeline."""
     return Pipeline(
         [
             Node(

@@ -9,6 +9,7 @@ def get_filenames_by_extension(
     extension: str
     ) -> list[str] :
     
+    """List file names that match the given extension pattern."""
     all_movie = glob.glob(inputdir + extension)
     results = []
     for path in all_movie:
@@ -21,6 +22,7 @@ def get_filenames_by_extension(
 def run_command(
     command: list[str]
     ) -> subprocess.CompletedProcess[str]:
+    """Run a command and raise an error if it fails."""
     result = subprocess.run(
         command,
         text=True,
@@ -55,6 +57,7 @@ def clean_docker_files(
     ) -> None:
     
     # Docker内の入力動画を削除
+    """Remove temporary input and output files in the container."""
     run_command(
         [
             "docker",
@@ -84,6 +87,7 @@ def clean_openface_temporary(
     temporary_dir: str
     ) -> None :
     
+    """Remove OpenFace CSV files from the temporary directory."""
     ext = ".csv"
     rm_list = get_filenames_by_extension(temporary_dir, "/*"+ext)
     print(rm_list)

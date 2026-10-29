@@ -12,12 +12,15 @@ from fatigued_face_space.parameter_inspection import (
 )
 
 
+# プロジェクト用コマンドを登録
 @click.group(name="kedro")
 def cli() -> None:
     """Commands for this Kedro project."""
 
 
+# 実験設定の確認結果を表示
 def _run_experiment_check(metadata, env: str, pipeline: str) -> None:
+    """Check experiment settings and display the results."""
     click.echo(f"Experiment check: env={env}  pipeline={pipeline}")
     results = check_experiment(metadata.project_path, env, pipeline)
     for result in results:
@@ -31,7 +34,9 @@ def _run_experiment_check(metadata, env: str, pipeline: str) -> None:
         raise SystemExit(1)
 
 
+# パラメータの確認結果を表で表示
 def _show_parameter_table(rows: list[ParameterRow]) -> None:
+    """Display parameter values and their check results."""
     headers = ("PARAMETER", "VALUE", "ACTUAL", "EXPECTED", "RESULT")
     values = [
         (row.name, row.value, row.actual_type, row.expected_type, row.result)
@@ -49,6 +54,7 @@ def _show_parameter_table(rows: list[ParameterRow]) -> None:
         )
 
 
+# 実験設定またはパラメータを確認
 @cli.group(name="check", invoke_without_command=True)
 @click.option("--env", help="Experiment configuration directory name.")
 @click.option("--pipeline", help="Registered pipeline name.")
@@ -62,6 +68,7 @@ def check(ctx: click.Context, env: str | None, pipeline: str | None) -> None:
     _run_experiment_check(ctx.obj, env, pipeline)
 
 
+# パラメータの値と型を確認
 @check.command(name="params")
 @click.argument("parameter", required=False)
 @click.option("--env", required=True, help="Experiment configuration directory name.")
@@ -94,11 +101,13 @@ def check_params(metadata, parameter: str | None, env: str, pipeline: str) -> No
         raise SystemExit(1)
 
 
+# 既存の実験用コマンドを登録
 @cli.group(hidden=True)
 def expt() -> None:
     """Compatibility commands for existing experiment scripts."""
 
 
+# 実験設定と必要なメタデータを確認
 @expt.command(name="check")
 @click.option("--env", required=True, help="Experiment configuration directory name.")
 @click.option("--pipeline", required=True, help="Registered pipeline name.")

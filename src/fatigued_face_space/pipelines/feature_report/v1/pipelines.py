@@ -7,7 +7,9 @@ from fatigued_face_space.nodes.peak.v1.nodes import get_peak_freq_feature
 from fatigued_face_space.nodes.trend.v1.nodes import get_trend_mean_feature, get_trend_var_feature
 
 
+# 特徴量を抽出して統合するPipelineを構築
 def create_features_report(**kwargs) -> Pipeline :
+    """Build a pipeline that extracts and combines features."""
     return Pipeline(
         [
             Node(

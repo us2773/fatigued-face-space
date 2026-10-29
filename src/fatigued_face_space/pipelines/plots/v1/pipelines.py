@@ -9,6 +9,7 @@ from fatigued_face_space.nodes.plots.v1.nodes import (
 )
 
 
+# AUの時系列グラフを作成するPipelineを構築
 def create_au_plots() -> Pipeline:
     """Plot every AU for the movies selected by the metadata file."""
     return Pipeline(

@@ -6,4 +6,5 @@ def get_movie_list(
     metadata: pd.DataFrame
     ) -> list[str] :
     
+    """Return movie names from the metadata table."""
     return metadata["Name"].tolist()

@@ -38,7 +38,9 @@ class ParameterRow:
     used_by: tuple[str, ...]
 
 
+# Nodeが使用するパラメータと引数を取得
 def _parameter_uses(pipeline: Pipeline) -> dict[str, list[ParameterUse]]:
+    """Find the node arguments that use each parameter."""
     uses: dict[str, list[ParameterUse]] = defaultdict(list)
     for node in pipeline.nodes:
         signature = inspect.signature(node.func, follow_wrapped=False)
@@ -64,7 +66,9 @@ def _parameter_uses(pipeline: Pipeline) -> dict[str, list[ParameterUse]]:
     return uses
 
 
+# 指定した階層のパラメータ値を取得
 def _value_at_path(parameters: Mapping, name: str) -> Any:
+    """Read a parameter value from its path."""
     value: Any = parameters
     for part in name.split("."):
         if not isinstance(value, Mapping) or part not in value:
@@ -73,7 +77,9 @@ def _value_at_path(parameters: Mapping, name: str) -> Any:
     return value
 
 
+# 型注釈を表示用の文字列に変換
 def _type_name(annotation: Any) -> str:
+    """Return a readable name for a type annotation."""
     if annotation is inspect.Parameter.empty or annotation is Any:
         return "unknown"
     if annotation is type(None):
@@ -86,7 +92,9 @@ def _type_name(annotation: Any) -> str:
     return str(annotation).removeprefix("typing.")
 
 
+# 値が指定した型に合うかを確認
 def _matches_type(value: Any, annotation: Any) -> bool | None:
+    """Check whether a value matches a type annotation."""
     if annotation is inspect.Parameter.empty or annotation is Any:
         result = None
     elif annotation is type(None):
@@ -106,7 +114,9 @@ def _matches_type(value: Any, annotation: Any) -> bool | None:
     return result
 
 
+# リストや辞書の要素の型を確認
 def _matches_collection(value: Any, origin: Any, args: tuple[Any, ...]) -> bool | None:
+    """Check the types of items in a collection."""
     if origin is list:
         if not isinstance(value, list):
             return False
@@ -125,19 +135,25 @@ def _matches_collection(value: Any, origin: Any, args: tuple[Any, ...]) -> bool 
     return None
 
 
+# 複数の型確認結果を集約
 def _combine_checks(checks: list[bool | None]) -> bool | None:
+    """Combine type checks while keeping unknown results."""
     if False in checks:
         return False
     return None if None in checks else True
 
 
+# 全要素が指定した型に合うかを確認
 def _all_match(values: Any, annotation: Any) -> bool | None:
+    """Check whether all items match the given type."""
     return _combine_checks([_matches_type(value, annotation) for value in values])
 
 
+# パラメータの確認結果を一行に整理
 def _row_for_parameter(
     name: str, parameters: Mapping, uses: list[ParameterUse]
 ) -> ParameterRow:
+    """Build a table row for one parameter and its uses."""
     value = _value_at_path(parameters, name)
     expected = tuple(dict.fromkeys(_type_name(use.annotation) for use in uses))
     expected_type = " / ".join(expected)
@@ -162,6 +178,7 @@ def _row_for_parameter(
     )
 
 
+# 選択したPipelineのパラメータを確認
 def inspect_parameters(
     project_path: Path, env: str, pipeline_name: str, selector: str | None = None
 ) -> tuple[list[ParameterRow], bool]:

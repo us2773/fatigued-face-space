@@ -33,10 +33,13 @@ class ParameterDefinition:
     path: Path
     node: Node
 
+    # 設定の定義元をファイル名と行番号で取得
     def location(self, project_path: Path) -> str:
+        """Return the source file and line number for a parameter."""
         return f"{self.path.relative_to(project_path)}:{self.node.start_mark.line + 1}"
 
 
+# Pipelineが必要とする入力を取得
 def requirements_for_pipeline(pipeline: Pipeline) -> ExperimentRequirements:
     """Derive requirements from the pipeline instead of maintaining a second list."""
     inputs = pipeline.inputs()
@@ -48,7 +51,9 @@ def requirements_for_pipeline(pipeline: Pipeline) -> ExperimentRequirements:
     )
 
 
+# パラメータの設定状態を確認
 def _parameter_state(parameters: Mapping, name: str) -> str:
+    """Check whether a parameter is missing, null, blank, or set."""
     value = parameters
     for part in name.split("."):
         if not isinstance(value, Mapping) or part not in value:
@@ -61,7 +66,9 @@ def _parameter_state(parameters: Mapping, name: str) -> str:
     return "present"
 
 
+# 設定読込対象のパラメータファイルを取得
 def _parameter_files(config_loader: Any, directory: Path) -> list[Path]:
+    """Find parameter files that match the configuration patterns."""
     patterns = config_loader.config_patterns["parameters"]
     ignore_hidden = config_loader.ignore_hidden
     files = {
@@ -80,9 +87,11 @@ def _parameter_files(config_loader: Any, directory: Path) -> list[Path]:
     return sorted(files)
 
 
+# パラメータファイルをYAMLとして読込
 def _parameter_documents(
     config_loader: Any, directory: Path
 ) -> list[tuple[Path, Node]]:
+    """Read parameter files as YAML documents."""
     documents = []
     for path in _parameter_files(config_loader, directory):
         node = yaml.compose(path.read_text(encoding="utf-8"), Loader=yaml.SafeLoader)
@@ -91,7 +100,9 @@ def _parameter_documents(
     return documents
 
 
+# 指定した階層のYAML要素を取得
 def _node_at_path(node: Node, parts: tuple[str, ...]) -> Node | None:
+    """Find a YAML node at the given path."""
     for part in parts:
         if not isinstance(node, MappingNode):
             return None
@@ -106,6 +117,7 @@ def _node_at_path(node: Node, parts: tuple[str, ...]) -> Node | None:
     return node
 
 
+# 有効なパラメータの定義元を取得
 def _parameter_definition(
     name: str,
     base_documents: list[tuple[Path, Node]],
@@ -127,6 +139,7 @@ def _parameter_definition(
     return None
 
 
+# 値が省略されたYAML項目かを確認
 def _is_bare_empty(node: Node) -> bool:
     """Separate ``key:`` from explicit ``key: null`` before YAML loses that detail."""
     return (
@@ -137,14 +150,17 @@ def _is_bare_empty(node: Node) -> bool:
     )
 
 
+# 機密情報を含めず例外名を取得
 def _safe_error_name(error: Exception) -> str:
     """Avoid printing configuration values or credentials from exception text."""
     return type(error).__name__
 
 
+# 設定を読み込み失敗を確認結果に記録
 def _load_config(
     name: str, load: Callable[[], Any], results: list[CheckResult]
 ) -> Any | None:
+    """Load a configuration section and record any failure."""
     try:
         return load()
     except Exception as error:
@@ -157,12 +173,14 @@ def _load_config(
         return None
 
 
+# メタデータの選択設定を確認
 def _check_metadata_selection(
     globals_config: Mapping | None,
     globals_file: Path,
     env: str,
     results: list[CheckResult],
 ) -> str | None:
+    """Check which metadata file the experiment uses."""
     if not globals_file.is_file():
         display_file = Path(settings.CONF_SOURCE) / env / "globals.yml"
         results.append(
@@ -186,6 +204,7 @@ def _check_metadata_selection(
     return None
 
 
+# 必要なパラメータの定義と値を確認
 def _check_parameters(
     parameters: Mapping | None,
     requirements: ExperimentRequirements,
@@ -193,6 +212,7 @@ def _check_parameters(
     env: str,
     results: list[CheckResult],
 ) -> None:
+    """Check that required parameters have valid definitions and values."""
     if parameters is None:
         results.append(CheckResult("SKIP", "Parameters: configuration unavailable"))
         return
@@ -240,6 +260,7 @@ def _check_parameters(
         )
 
 
+# メタデータファイルと必要な項目を確認
 def _check_metadata(
     catalog_config: Mapping | None,
     catalog: Any | None,
@@ -247,6 +268,7 @@ def _check_metadata(
     metadata_file: str | None,
     results: list[CheckResult],
 ) -> None:
+    """Check the metadata file and its required fields."""
     if not requirements.metadata:
         results.append(
             CheckResult("SKIP", "Metadata: pipeline does not use movie_metadata")
@@ -293,6 +315,7 @@ def _check_metadata(
             results.append(CheckResult("ERROR", f"Metadata missing: {filepath}"))
 
 
+# Kedroの実験設定と入力を確認
 def _check_context(
     context: Any,
     env: str,
@@ -300,6 +323,7 @@ def _check_context(
     globals_file: Path,
     results: list[CheckResult],
 ) -> None:
+    """Check the experiment context and its required inputs."""
     globals_config = _load_config(
         "globals", lambda: context.config_loader["globals"], results
     )
@@ -325,6 +349,7 @@ def _check_context(
     _check_metadata(catalog_config, catalog, requirements, metadata_file, results)
 
 
+# Nodeを実行せず実験設定を確認
 def check_experiment(
     project_path: Path, env: str, pipeline_name: str
 ) -> list[CheckResult]:

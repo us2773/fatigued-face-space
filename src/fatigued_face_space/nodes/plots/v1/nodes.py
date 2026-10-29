@@ -9,6 +9,7 @@ from matplotlib.figure import Figure
 from fatigued_face_space.common.au_map import au_map_int
 
 
+# 動画名とAU番号からグラフの保存先を取得
 def _plot_output_key(movie_name: str, au_number: int) -> str:
     """Keep each movie in its own directory below the catalog output path."""
     if (
@@ -20,9 +21,11 @@ def _plot_output_key(movie_name: str, au_number: int) -> str:
     return f"{movie_name}/AU{au_number:02}.png"
 
 
+# AUグラフの描画領域と軸を作成
 def _create_au_figure(
     movie_name: str, au_number: int, plot_kind: str
 ) -> tuple[Figure, Axes]:
+    """Create a figure and axes for an AU plot."""
     figure = Figure(figsize=(10, 4.5), layout="constrained")
     axes = figure.subplots()
     axes.set_title(f"{movie_name} | AU{au_number:02}_r | {plot_kind}")
@@ -32,6 +35,7 @@ def _create_au_figure(
     return figure, axes
 
 
+# Node: 動画ごとにAUの元信号とトレンドと残差を描画
 def create_trend_residual_plots(
     partitions: Mapping[str, Callable[[], pd.DataFrame]],
     trend_residual_partitions: Mapping[str, Callable[[], pd.DataFrame]],
@@ -69,6 +73,7 @@ def create_trend_residual_plots(
     return trend_residual_figures
 
 
+# Node: 動画ごとにAUの元信号と残差とピークを描画
 def create_peak_plots(
     partitions: Mapping[str, Callable[[], pd.DataFrame]],
     trend_residual_partitions: Mapping[str, Callable[[], pd.DataFrame]],

@@ -15,6 +15,7 @@ from fatigued_face_space.pipelines.feature_select.v2.pipelines import create_fea
 from fatigued_face_space.pipelines.plots.v1.pipelines import create_au_plots
 
 
+# 実行可能なPipelineを登録
 def register_pipelines() -> dict[str, Pipeline]:
     """Register the project's pipelines.
 
