@@ -99,8 +99,9 @@ def get_openface_from_csv_timeseries(
             low_memory=False,
         )
 
-    # temporaryディレクトリのクリーンナップ
-    clean_openface_temporary(output_dir)
+    # Remove only the CSV files consumed by this node.
+    for movie_name in incomplete_movies:
+        (Path(output_dir) / f"{movie_name}.csv").unlink()
     return results
 
 # Node: OpenFaceコマンドの実行関数
