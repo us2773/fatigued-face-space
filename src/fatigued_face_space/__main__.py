@@ -9,7 +9,9 @@ from kedro.framework.cli.utils import find_run_command
 from kedro.framework.project import configure_project
 
 
+# プロジェクトの実行コマンドを起動
 def main(*args, **kwargs) -> Any:
+    """Run the project command with the Kedro configuration."""
     package_name = Path(__file__).parent.name
     configure_project(package_name)
 

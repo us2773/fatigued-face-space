@@ -5,8 +5,8 @@ from kedro_datasets.matplotlib import MatplotlibDataset
 from matplotlib.colors import to_rgba
 from matplotlib.markers import MarkerStyle
 
-from fatigued_face_space.pipelines.au_map import au_map_int
-from fatigued_face_space.pipelines.plots.nodes import (
+from fatigued_face_space.common.au_map import au_map_int
+from fatigued_face_space.nodes.plots.v1.nodes import (
     create_peak_plots,
     create_trend_residual_plots,
 )

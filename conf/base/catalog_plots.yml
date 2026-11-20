@@ -1,6 +1,6 @@
 trend_residual_plots:
   type: matplotlib.MatplotlibDataset
-  filepath: data/06_plot/trend_noise
+  filepath: data/plots/trend_noise
   versioned: true
   save_args:
     format: png
@@ -8,7 +8,7 @@ trend_residual_plots:
 
 peak_plots:
   type: matplotlib.MatplotlibDataset
-  filepath: data/06_plot/peak
+  filepath: data/plots/peak
   versioned: true
   save_args:
     format: png
