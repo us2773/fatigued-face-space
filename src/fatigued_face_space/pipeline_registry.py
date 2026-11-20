@@ -14,6 +14,7 @@ from fatigued_face_space.pipelines.feature_select.v1.pipelines import create_fea
 from fatigued_face_space.pipelines.feature_select.v2.pipelines import create_feature_select_v2
 from fatigued_face_space.pipelines.plots.v1.pipelines import create_au_plots
 from fatigued_face_space.pipelines.daily.v1.pipelines import daily_feature_report
+from fatigued_face_space.pipelines.analyze.v1.pipelines import one_movie_report
 
 
 # 実行可能なPipelineを登録
@@ -36,5 +37,6 @@ def register_pipelines() -> dict[str, Pipeline]:
         "ext_select": create_features_report_v4() + create_feature_select(),
         "feature_select_v2": create_feature_select_v2(),
         "ext_select_v2": create_features_report_v4() + create_feature_select_v2(),
-        "daily": daily_feature_report()
+        "daily": daily_feature_report(),
+        "analyze" : one_movie_report()
     }

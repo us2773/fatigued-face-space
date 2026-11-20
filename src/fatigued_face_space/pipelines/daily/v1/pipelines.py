@@ -1,7 +1,8 @@
 from kedro.pipeline import Node, Pipeline
 
 from fatigued_face_space.nodes.openface.v1.nodes import (
-    get_incomplete_movies,run_openface, 
+    get_incomplete_movies, 
+    
     get_openface_from_video_timeseries, 
     get_openface_from_csv_timeseries
     )
@@ -29,7 +30,7 @@ def daily_feature_report(**kwargs) -> Pipeline:
                 name="get_incomplete_movies",
             ),
             Node(
-                func=run_openface,
+                func=get_openface_from_video_timeseries,
                 inputs=[
                     "params:openface.input_dir",
                     "params:openface.temporary_dir",
@@ -38,13 +39,14 @@ def daily_feature_report(**kwargs) -> Pipeline:
                     "params:docker.docker_workdir",
                     "params:docker.docker_processed_dir",
                     "params:docker.feature_extraction",
+                    "params:au_model"
                     ],
                 outputs="openface_result",
-                name="run_openface",
+                name="get_openface_from_video_timeseries",
             ),
             Node(
                 func=get_cleansed_openface_timeseries,
-                inputs=["openface_timeseries"],
+                inputs=["openface_result"],
                 outputs="cleansed_openface_timeseries",
                 name="get_cleansed_openface_timeseries"
             ),

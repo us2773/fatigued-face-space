@@ -1,14 +1,14 @@
 import os
 
 import pandas as pd
-
+import glob
+from pathlib import Path
 from ._helpers import (
     clean_docker_files,
     clean_openface_temporary,
     get_filenames_by_extension,
     run_command,
 )
-
 
 # Node: OpenFaceコマンド未実行動画の一覧を取得
 def get_incomplete_movies(
@@ -41,6 +41,35 @@ def get_incomplete_movies(
     print(results)
     return results
 
+# Node: 未処理動画のうち最も古い動画をリストで返す
+def select_oldest_movie(
+    input_dir: str,
+    result_dir: str,
+    input_ext: str,
+    result_ext: str,
+) -> list[str]:
+    """the oldest movie that do not have OpenFace result yet. """
+    completed_names = {
+        Path(path).stem
+        for path in glob.glob(result_dir + result_ext)
+        if Path(path).is_file()
+    }
+
+    candidates = [
+        Path(path)
+        for path in glob.glob(input_dir + input_ext)
+        if Path(path).is_file()
+        and Path(path).stem not in completed_names
+    ]
+
+    if not candidates:
+        raise ValueError("処理対象の未処理動画がありません。")
+
+    oldest = min(
+        candidates,
+        key=lambda path: (path.stat().st_mtime_ns, path.name),
+    )
+    return [oldest.stem]
 
 # 一時ディレクトリを読み出してpd.DataFrameを返すことでフレームワークが出力を認識
 # Node: OpenFaceのCSVを読み込み一時ファイルを削除
@@ -73,7 +102,6 @@ def get_openface_from_csv_timeseries(
     # temporaryディレクトリのクリーンナップ
     clean_openface_temporary(output_dir)
     return results
-
 
 # Node: OpenFaceコマンドの実行関数
 # OpenFace実行結果は一時ディレクトリに保存

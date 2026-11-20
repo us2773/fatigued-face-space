@@ -25,6 +25,8 @@ peak:
   min_prominence: 0.1
   max_width_seconds: null
   min_distance_seconds: null
+  height_multiplier: 3.0
+  rel_height: 0.5  
 
 # Docker関連
 # サンプル
