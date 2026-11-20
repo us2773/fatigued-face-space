@@ -2,6 +2,7 @@ from kedro.pipeline import Node, Pipeline
 
 from fatigued_face_space.nodes.openface.v1.nodes import (
     select_oldest_movie,get_openface_from_video_timeseries, 
+    get_openface_from_csv_timeseries
     )
 from fatigued_face_space.nodes.cleansing.v1.nodes import get_cleansed_openface_timeseries
 
@@ -14,9 +15,7 @@ from fatigued_face_space.nodes.trend.v2.nodes import (
     get_trend_var_feature,
 )
 
-
-    
-def one_movie_report(**kwargs) -> Pipeline:
+def movie_selection(**kwargs) -> Pipeline:
     return Pipeline(
         [
             Node(
@@ -28,6 +27,19 @@ def one_movie_report(**kwargs) -> Pipeline:
                 outputs="movie_list",
                 name="select_oldest_movie",
             ),
+        ]
+    )
+    
+def one_movie_report(**kwargs) -> Pipeline:
+    return Pipeline(
+        [
+            Node(
+                func=get_openface_from_csv_timeseries,
+                inputs=["incomplete_movies", "params:openface.temporary_dir"],
+                outputs="openface_timeseries",
+                name="get_openface_from_csv_timeseries"
+            ),
+
             Node(
                 func=get_openface_from_video_timeseries,
                 inputs=[
